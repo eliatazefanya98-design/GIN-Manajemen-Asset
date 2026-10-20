@@ -19,14 +19,14 @@ class MaintenanceRecordController extends Controller
             ->with('asset')
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
-                    $query->where('jenis', 'ilike', "%{$search}%")
-                        ->orWhere('keluhan', 'ilike', "%{$search}%")
-                        ->orWhere('kerusakan', 'ilike', "%{$search}%")
-                        ->orWhere('teknisi', 'ilike', "%{$search}%")
-                        ->orWhere('status', 'ilike', "%{$search}%")
+                    $query->where('jenis', 'like', "%{$search}%")
+                        ->orWhere('keluhan', 'like', "%{$search}%")
+                        ->orWhere('kerusakan', 'like', "%{$search}%")
+                        ->orWhere('teknisi', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%")
                         ->orWhereHas('asset', function ($query) use ($search) {
-                            $query->where('kode_asset', 'ilike', "%{$search}%")
-                                ->orWhere('nama_asset', 'ilike', "%{$search}%");
+                            $query->where('kode_asset', 'like', "%{$search}%")
+                                ->orWhere('nama_asset', 'like', "%{$search}%");
                         });
                 });
             })

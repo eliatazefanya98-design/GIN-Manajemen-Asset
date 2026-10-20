@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('system_settings', function (Blueprint $table) {
-            $table->string('theme', 10)->default('light')->after('organization_unit');
-        });
+        if (! Schema::hasColumn('system_settings', 'theme')) {
+            Schema::table('system_settings', function (Blueprint $table) {
+                $table->string('theme', 10)->default('light')->after('organization_unit');
+            });
+        }
     }
 
     public function down(): void

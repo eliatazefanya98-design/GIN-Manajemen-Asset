@@ -10,24 +10,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('assets', function (Blueprint $table) {
-            $table->string('merk')->nullable();
-            $table->string('tipe')->nullable();
-            $table->string('penanggung_jawab')->nullable();
+            if (! Schema::hasColumn('assets', 'merk')) {
+                $table->string('merk')->nullable();
+            }
+            if (! Schema::hasColumn('assets', 'tipe')) {
+                $table->string('tipe')->nullable();
+            }
+            if (! Schema::hasColumn('assets', 'penanggung_jawab')) {
+                $table->string('penanggung_jawab')->nullable();
+            }
         });
 
-        if (DB::connection()->getDriverName() === 'sqlite') {
-            Schema::table('assets', function (Blueprint $table) {
-                $table->string('condition')->default('baik')->change();
-                $table->string('status')->default('aktif')->change();
-            });
-
-            return;
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE assets DROP CONSTRAINT IF EXISTS assets_condition_check');
+            DB::statement('ALTER TABLE assets DROP CONSTRAINT IF EXISTS assets_status_check');
+            DB::statement("ALTER TABLE assets ADD CONSTRAINT assets_condition_check CHECK (kondisi IN ('baik', 'rusak_ringan', 'rusak_berat'))");
+            DB::statement("ALTER TABLE assets ADD CONSTRAINT assets_status_check CHECK (status IN ('aktif', 'dipinjam', 'maintenance', 'rusak', 'dihapus', 'tidak_aktif'))");
         }
-
-        DB::statement('ALTER TABLE assets DROP CONSTRAINT IF EXISTS assets_condition_check');
-        DB::statement('ALTER TABLE assets DROP CONSTRAINT IF EXISTS assets_status_check');
-        DB::statement("ALTER TABLE assets ADD CONSTRAINT assets_condition_check CHECK (condition IN ('baik', 'rusak_ringan', 'rusak_berat'))");
-        DB::statement("ALTER TABLE assets ADD CONSTRAINT assets_status_check CHECK (status IN ('aktif', 'dipinjam', 'maintenance', 'rusak', 'dihapus', 'tidak_aktif'))");
     }
 
     public function down(): void

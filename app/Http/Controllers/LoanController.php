@@ -25,8 +25,8 @@ class LoanController extends Controller
             ->whereRaw('LOWER(status) = ?', ['aktif'])
             ->whereDoesntHave('loans', fn (Builder $query) => $query->where('status', 'Dipinjam'))
             ->when($search !== '', fn (Builder $query) => $query->where(function (Builder $searchQuery) use ($search) {
-                $searchQuery->where('kode_asset', 'ilike', "%{$search}%")
-                    ->orWhere('nama_asset', 'ilike', "%{$search}%");
+                $searchQuery->where('kode_asset', 'like', "%{$search}%")
+                    ->orWhere('nama_asset', 'like', "%{$search}%");
             }))
             ->orderBy('nama_asset')
             ->paginate(12, ['*'], 'assets_page')

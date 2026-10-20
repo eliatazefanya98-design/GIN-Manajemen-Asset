@@ -9,13 +9,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('locations', function (Blueprint $table) {
-            $table->string('gedung')->nullable();
-            $table->string('lantai')->nullable();
-            $table->string('ruangan')->nullable();
+            if (! Schema::hasColumn('locations', 'gedung')) {
+                $table->string('gedung')->nullable();
+            }
+            if (! Schema::hasColumn('locations', 'lantai')) {
+                $table->string('lantai')->nullable();
+            }
+            if (! Schema::hasColumn('locations', 'ruangan')) {
+                $table->string('ruangan')->nullable();
+            }
         });
 
         Schema::table('vendors', function (Blueprint $table) {
-            $table->string('email')->nullable();
+            if (! Schema::hasColumn('vendors', 'email')) {
+                $table->string('email')->nullable();
+            }
         });
     }
 

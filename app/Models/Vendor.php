@@ -12,10 +12,36 @@ class Vendor extends Model
 
     protected $fillable = [
         'nama',
+        'name',
         'kontak',
+        'contact',
         'email',
         'alamat',
+        'address',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Vendor $vendor) {
+            if ($vendor->nama && ! $vendor->name) {
+                $vendor->name = $vendor->nama;
+            } elseif ($vendor->name && ! $vendor->nama) {
+                $vendor->nama = $vendor->name;
+            }
+
+            if ($vendor->kontak && ! $vendor->contact) {
+                $vendor->contact = $vendor->kontak;
+            } elseif ($vendor->contact && ! $vendor->kontak) {
+                $vendor->kontak = $vendor->contact;
+            }
+
+            if ($vendor->alamat && ! $vendor->address) {
+                $vendor->address = $vendor->alamat;
+            } elseif ($vendor->address && ! $vendor->alamat) {
+                $vendor->alamat = $vendor->address;
+            }
+        });
+    }
 
     public function assets(): HasMany
     {

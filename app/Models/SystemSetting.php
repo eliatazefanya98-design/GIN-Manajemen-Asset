@@ -9,6 +9,7 @@ class SystemSetting extends Model
     protected $fillable = [
         'organization_name',
         'organization_unit',
+        'theme',
         'timezone',
         'date_format',
         'asset_prefix',
@@ -30,6 +31,7 @@ class SystemSetting extends Model
         return [
             'organization_name' => 'PT Global Internasional Nusantara',
             'organization_unit' => 'Divisi Infrastruktur & IT Ops',
+            'theme' => 'light',
             'timezone' => 'Asia/Jakarta (GMT+07:00)',
             'date_format' => 'DD/MM/YYYY',
             'asset_prefix' => 'AST-GIN',

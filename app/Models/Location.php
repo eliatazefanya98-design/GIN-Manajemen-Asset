@@ -12,11 +12,30 @@ class Location extends Model
 
     protected $fillable = [
         'nama',
+        'name',
         'gedung',
         'lantai',
         'ruangan',
         'deskripsi',
+        'description',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Location $location) {
+            if ($location->nama && ! $location->name) {
+                $location->name = $location->nama;
+            } elseif ($location->name && ! $location->nama) {
+                $location->nama = $location->name;
+            }
+
+            if ($location->deskripsi && ! $location->description) {
+                $location->description = $location->deskripsi;
+            } elseif ($location->description && ! $location->deskripsi) {
+                $location->deskripsi = $location->description;
+            }
+        });
+    }
 
     public function assets(): HasMany
     {

@@ -13,19 +13,6 @@
 
     <div class="navbar-right">
 
-        {{-- SEARCH --}}
-        <div class="search-box">
-
-            <i class="bi bi-search"></i>
-
-            <input
-                type="text"
-                placeholder="Cari asset, kode asset, SN, pengguna..."
-            >
-
-        </div>
-
-
         {{-- NOTIFICATION --}}
         <button class="notification-button">
 
@@ -39,19 +26,20 @@
         {{-- USER --}}
         <div class="user-profile">
 
-            <div class="user-avatar">
+            <a href="{{ route('profile.index') }}" class="user-profile-link" title="Buka Profil Saya">
+                <div class="user-avatar">
+                    @if(auth()->user()->profile_photo_path)
+                        <img src="{{ asset('storage/' . auth()->user()->profile_photo_path) }}" alt="{{ auth()->user()->name }}" class="navbar-avatar-img">
+                    @else
+                        <i class="bi bi-person-fill"></i>
+                    @endif
+                </div>
 
-                <i class="bi bi-person-fill"></i>
-
-            </div>
-
-            <div class="user-info">
-
-                <strong>{{ auth()->user()->name }}</strong>
-
-                <small>{{ ucfirst(auth()->user()->role) }} · {{ auth()->user()->email }}</small>
-
-            </div>
+                <div class="user-info">
+                    <strong>{{ auth()->user()->name }}</strong>
+                    <small>{{ ucfirst(auth()->user()->role) }} · {{ auth()->user()->email }}</small>
+                </div>
+            </a>
 
             <form method="POST" action="{{ route('logout') }}" class="logout-form">
                 @csrf
@@ -113,46 +101,6 @@
 }
 
 
-.search-box {
-
-    width: 325px;
-
-    height: 40px;
-
-    border: 1px solid #e2e7ef;
-
-    border-radius: 8px;
-
-    display: flex;
-
-    align-items: center;
-
-    padding: 0 13px;
-
-}
-
-
-.search-box i {
-
-    color: #758196;
-
-}
-
-
-.search-box input {
-
-    border: none;
-
-    outline: none;
-
-    width: 100%;
-
-    margin-left: 9px;
-
-    font-size: 12px;
-
-}
-
 
 .notification-button {
 
@@ -210,6 +158,38 @@
 
 }
 
+.user-profile-link {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    text-decoration: none;
+
+    color: inherit;
+
+    padding: 4px 6px;
+
+    border-radius: 8px;
+
+    transition: background-color 0.15s ease, transform 0.15s ease;
+
+}
+
+.user-profile-link:hover {
+
+    background-color: #f3f5f9;
+
+}
+
+.user-profile-link:hover .user-avatar {
+
+    transform: scale(1.04);
+
+}
+
 
 .user-avatar {
 
@@ -228,6 +208,24 @@
     justify-content: center;
 
     color: white;
+
+    overflow: hidden;
+
+    flex-shrink: 0;
+
+    transition: transform 0.15s ease;
+
+}
+
+.navbar-avatar-img {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+
+    border-radius: 50%;
 
 }
 
@@ -273,11 +271,6 @@
 
 @media (max-width: 768px) {
 
-    .search-box {
-
-        display: none;
-
-    }
 
     .user-info {
 

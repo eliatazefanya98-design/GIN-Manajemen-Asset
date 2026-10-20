@@ -22,9 +22,6 @@
 
     <nav class="settings-tabs" aria-label="Navigasi pengaturan">
         <a class="active" href="#general"><i class="bi bi-building"></i> Umum</a>
-        <a href="#format"><i class="bi bi-hash"></i> Penomoran & Kode</a>
-        <a href="#notifications"><i class="bi bi-bell"></i> Notifikasi & Alarm</a>
-        <a href="#security"><i class="bi bi-shield-check"></i> Integrasi API & AI</a>
     </nav>
 
     <form id="reset-settings-form" method="POST" action="{{ route('settings.reset') }}" class="d-none">
@@ -43,6 +40,13 @@
                         <div><label for="organization_unit">Unit / Divisi Utama</label><input id="organization_unit" name="organization_unit" class="form-control" value="{{ old('organization_unit', $settings['organization_unit']) }}"></div>
                         <div><label for="timezone">Zona Waktu Default</label><select id="timezone" name="timezone" class="form-select"><option value="Asia/Jakarta (GMT+07:00)" @selected($settings['timezone'] === 'Asia/Jakarta (GMT+07:00)')>WIB - Asia/Jakarta (GMT+07:00)</option><option value="Asia/Makassar (GMT+08:00)" @selected($settings['timezone'] === 'Asia/Makassar (GMT+08:00)')>WITA - Asia/Makassar (GMT+08:00)</option><option value="Asia/Jayapura (GMT+09:00)" @selected($settings['timezone'] === 'Asia/Jayapura (GMT+09:00)')>WIT - Asia/Jayapura (GMT+09:00)</option></select></div>
                         <div><label for="date_format">Mata Uang & Penulisan Aset</label><select id="date_format" name="date_format" class="form-select"><option value="DD/MM/YYYY" @selected($settings['date_format'] === 'DD/MM/YYYY')>DD/MM/YYYY</option><option value="YYYY-MM-DD" @selected($settings['date_format'] === 'YYYY-MM-DD')>YYYY-MM-DD</option></select></div>
+                        <div>
+                            <label class="form-label" for="theme-toggle">Tema Tampilan</label>
+                            <div id="theme-toggle" class="theme-options">
+                                <label class="theme-option"><input type="radio" name="theme" value="light" @checked(($settings['theme'] ?? 'light') === 'light')><span class="theme-option-label"><i class="bi bi-sun"></i> Terang</span></label>
+                                <label class="theme-option"><input type="radio" name="theme" value="dark" @checked(($settings['theme'] ?? 'light') === 'dark')><span class="theme-option-label"><i class="bi bi-moon-stars"></i> Gelap</span></label>
+                            </div>
+                        </div>
                     </div>
                 </section>
 

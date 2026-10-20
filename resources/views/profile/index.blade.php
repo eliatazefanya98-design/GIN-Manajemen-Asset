@@ -4,9 +4,16 @@
 
 @section('content')
 
+@php
+    $backUrl = in_array(auth()->user()->role, ['admin', 'pimpinan'])
+        ? route('dashboard')
+        : (auth()->user()->role === 'staff' ? route('assets.index') : route('loans.index'));
+    $hasPasswordErrors = $errors->has('current_password') || $errors->has('password') || $errors->has('password_confirmation');
+@endphp
+
 <div class="profile-page">
     <div class="profile-header">
-        <a href="{{ route('dashboard') }}" class="back-link" aria-label="Kembali ke dashboard">
+        <a href="{{ $backUrl }}" class="back-link" aria-label="Kembali">
             <i class="bi bi-arrow-left"></i>
         </a>
 
@@ -15,6 +22,13 @@
             <p class="profile-subtitle">Kelola informasi profil dan data diri Anda</p>
         </div>
     </div>
+
+    @if(session('success'))
+        <div class="alert alert-success d-flex align-items-center gap-2 mb-3" style="border-radius: 12px; font-size: 12px;">
+            <i class="bi bi-check-circle-fill"></i>
+            <div>{{ session('success') }}</div>
+        </div>
+    @endif
 
     <div class="profile-shell">
         <div class="profile-card">
@@ -49,25 +63,25 @@
 
                 <div class="detail-row">
                     <span class="label">Unit Kerja</span>
-                    <span class="value">Manajemen</span>
+                    <span class="value">{{ auth()->user()->role === 'admin' ? 'Administrator' : (auth()->user()->role === 'staff' ? 'Staff Aset' : (auth()->user()->role === 'pimpinan' ? 'Pimpinan' : 'Peminjam / Pengguna')) }}</span>
                 </div>
             </div>
         </div>
 
         <div class="profile-panel">
             <div class="profile-tabs" role="tablist" aria-label="Akun profil">
-                <button class="tab-button" type="button" data-panel="profile-edit-panel" aria-selected="false">
+                <button class="tab-button {{ !$hasPasswordErrors ? 'active' : '' }}" type="button" data-panel="profile-edit-panel" aria-selected="{{ !$hasPasswordErrors ? 'true' : 'false' }}">
                     <i class="bi bi-pencil-square"></i>
                     Edit Profil
                 </button>
 
-                <button class="tab-button active" type="button" data-panel="password-panel" aria-selected="true">
+                <button class="tab-button {{ $hasPasswordErrors ? 'active' : '' }}" type="button" data-panel="password-panel" aria-selected="{{ $hasPasswordErrors ? 'true' : 'false' }}">
                     <i class="bi bi-shield-lock"></i>
                     Keamanan Akun
                 </button>
             </div>
 
-            <div class="profile-form-panel" id="profile-edit-panel" hidden>
+            <div class="profile-form-panel" id="profile-edit-panel" {{ $hasPasswordErrors ? 'hidden' : '' }}>
                 <div class="security-header">
                     <div class="security-icon">
                         <i class="bi bi-person-check"></i>
@@ -88,6 +102,7 @@
                         <div class="input-wrap">
                             <input id="profile_photo" type="file" name="profile_photo" accept="image/jpeg,image/png,image/webp">
                         </div>
+                        <small class="text-muted" style="font-size: 10px;">Format gambar: JPG, PNG, atau WEBP (Maksimal 2MB).</small>
                         @error('profile_photo')
                             <small class="text-danger d-block mt-2">{{ $message }}</small>
                         @enderror
@@ -122,7 +137,7 @@
                 </form>
             </div>
 
-            <div class="profile-form-panel" id="password-panel">
+            <div class="profile-form-panel" id="password-panel" {{ !$hasPasswordErrors ? 'hidden' : '' }}>
                 <div class="security-header">
                     <div class="security-icon">
                         <i class="bi bi-shield-check"></i>

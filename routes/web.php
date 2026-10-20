@@ -16,6 +16,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LoanController;
+use App\Http\Controllers\ProfileController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -61,6 +62,9 @@ Route::middleware(['auth', 'role:peminjam'])->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 });
 
 Route::middleware(['auth', 'role:admin,staff'])->group(function () {

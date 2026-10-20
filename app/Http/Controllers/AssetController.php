@@ -24,20 +24,20 @@ class AssetController extends Controller
             ->with(['category', 'location', 'vendor'])
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
-                    $query->where('kode_asset', 'ilike', "%{$search}%")
-                        ->orWhere('nama_asset', 'ilike', "%{$search}%")
-                        ->orWhere('merk', 'ilike', "%{$search}%")
-                        ->orWhere('tipe', 'ilike', "%{$search}%")
-                        ->orWhere('kondisi', 'ilike', "%{$search}%")
-                        ->orWhere('status', 'ilike', "%{$search}%")
+                    $query->where('kode_asset', 'like', "%{$search}%")
+                        ->orWhere('nama_asset', 'like', "%{$search}%")
+                        ->orWhere('merk', 'like', "%{$search}%")
+                        ->orWhere('tipe', 'like', "%{$search}%")
+                        ->orWhere('kondisi', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%")
                         ->orWhereHas('category', function ($query) use ($search) {
-                            $query->where('nama', 'ilike', "%{$search}%");
+                            $query->where('nama', 'like', "%{$search}%");
                         })
                         ->orWhereHas('location', function ($query) use ($search) {
-                            $query->where('nama', 'ilike', "%{$search}%");
+                            $query->where('nama', 'like', "%{$search}%");
                         })
                         ->orWhereHas('vendor', function ($query) use ($search) {
-                            $query->where('nama', 'ilike', "%{$search}%");
+                            $query->where('nama', 'like', "%{$search}%");
                         });
                 });
             })

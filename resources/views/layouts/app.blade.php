@@ -67,7 +67,7 @@
 
 </head>
 
-<body class="role-{{ auth()->user()->role }}">
+<body class="role-{{ auth()->user()->role }}" data-theme="{{ \App\Models\SystemSetting::current()->theme ?? 'light' }}">
 
 <div class="main-wrapper">
 

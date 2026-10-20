@@ -13,11 +13,11 @@ class LocationController extends Controller
 
         $locations = Location::query()
             ->when($search, function ($query, $search) {
-                $query->where('nama', 'ilike', "%{$search}%")
-                    ->orWhere('gedung', 'ilike', "%{$search}%")
-                    ->orWhere('lantai', 'ilike', "%{$search}%")
-                    ->orWhere('ruangan', 'ilike', "%{$search}%")
-                    ->orWhere('deskripsi', 'ilike', "%{$search}%");
+                $query->where('nama', 'like', "%{$search}%")
+                    ->orWhere('gedung', 'like', "%{$search}%")
+                    ->orWhere('lantai', 'like', "%{$search}%")
+                    ->orWhere('ruangan', 'like', "%{$search}%")
+                    ->orWhere('deskripsi', 'like', "%{$search}%");
             })
             ->withCount('assets')
             ->latest()

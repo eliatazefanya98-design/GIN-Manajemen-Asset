@@ -8,7 +8,7 @@
         <div>
             <div class="ai-eyebrow"><i class="bi bi-stars"></i> ANTIGRAVITY AI ASSISTANT</div>
             <h2>AI Assistant</h2>
-            <p class="text-muted mb-0">Tanyakan data aset, analisis dataset predictive maintenance mesin, atau panduan fitur sistem SIM Aset.</p>
+            <p class="text-muted mb-0">Tanyakan data inventaris aset, alur mutasi & approval, peminjaman, pemeliharaan, serta panduan fitur sistem SIM Aset.</p>
         </div>
         <div class="ai-status"><span></span> AI aktif · Gemini 3.8 Flash Low</div>
     </div>
@@ -20,7 +20,7 @@
                     <div class="ai-avatar"><i class="bi bi-stars"></i></div>
                     <div>
                         <strong>GIN Assistant</strong>
-                        <small>Didukung Knowledge dataset.csv & Panduan SIM Aset</small>
+                        <small>Didukung Knowledge Sistem SIM Aset & Data Inventaris Real-Time</small>
                     </div>
                     <a href="{{ route('ai.index') }}" class="btn btn-light btn-sm ms-auto">
                         <i class="bi bi-plus-lg me-1"></i> Chat baru
@@ -32,14 +32,14 @@
                         <div class="ai-avatar ai-avatar-small"><i class="bi bi-stars"></i></div>
                         <div>
                             <div class="ai-bubble">
-                                <p class="mb-2">Halo, <strong>{{ auth()->user()->name ?? 'Pengguna' }}</strong>! Saya adalah asisten cerdas sistem manajemen aset yang terhubung dengan model <strong>Gemini 3.8 Flash Low</strong>.</p>
+                                <p class="mb-2">Halo, <strong>{{ auth()->user()->name ?? 'Pengguna' }}</strong>! Saya adalah asisten cerdas <strong>Sistem Informasi Manajemen Aset (SIM Aset)</strong> yang siap membantu operasional inventaris Anda.</p>
                                 <p class="mb-2">Saya siap membantu Anda dengan:</p>
                                 <ul class="mb-2 ps-3">
-                                    <li><strong>Analisis 10.000 data sensor mesin pabrik</strong> dari <code>dataset.csv</code> (deteksi modus kegagalan TWF, HDF, PWF, OSF, RNF).</li>
-                                    <li><strong>Panduan seluruh fitur website</strong> (Master Data, Aset, Peminjaman, Mutasi & Approval Pimpinan, Maintenance, dan Riwayat).</li>
-                                    <li><strong>Data aset riil & riwayat pemeliharaan</strong> yang tersimpan di sistem saat ini.</li>
+                                    <li><strong>Data inventaris aset riil</strong> dari database (status aktif, dipinjam, maintenance/perbaikan, maupun rusak).</li>
+                                    <li><strong>Panduan alur kerja sistem</strong> (Master Data, Peminjaman Aset, Mutasi & Approval Pimpinan, serta Audit Trail Riwayat).</li>
+                                    <li><strong>SOP pemeliharaan teknis</strong> dan informasi hak akses peran (Admin, Pimpinan, Staff, dan Peminjam).</li>
                                 </ul>
-                                <p class="mb-0">Silakan tanyakan kondisi aset, cari Product ID mesin, atau konsultasikan alur kerja sistem!</p>
+                                <p class="mb-0">Silakan pilih topik pada <strong>Pilihan Cepat</strong> di bawah atau ajukan pertanyaan langsung melalui kolom chat!</p>
                             </div>
                             <small class="ai-time">Baru saja</small>
                         </div>
@@ -67,13 +67,12 @@
                     @endisset
                 </div>
 
-                <form action="{{ route('ai.chat') }}" method="POST" class="ai-composer">
+                <form action="{{ route('ai.chat') }}" method="POST" class="ai-composer" id="aiChatForm">
                     @csrf
                     <label for="prompt" class="visually-hidden">Tulis prompt</label>
-                    <textarea id="prompt" name="prompt" rows="2" placeholder="Tanyakan data aset, analisis mesin dari dataset.csv, atau panduan fitur sistem..." required>{{ old('prompt') }}</textarea>
-                    <div class="ai-composer-footer">
-                        <span><i class="bi bi-info-circle me-1"></i> Terhubung ke Antigravity API (Gemini 3.8 Flash Low)</span>
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-send-fill me-1"></i> Kirim</button>
+                    <textarea id="prompt" name="prompt" rows="2" placeholder="Tanyakan status aset, prosedur peminjaman, mutasi, pemeliharaan, atau panduan sistem SIM Aset..." required>{{ old('prompt') }}</textarea>
+                    <div class="ai-composer-footer justify-content-end">
+                        <button type="submit" class="btn btn-primary" id="btnSubmitAi"><i class="bi bi-send-fill me-1"></i> Kirim</button>
                     </div>
                 </form>
             </section>
@@ -83,47 +82,47 @@
             @endif
 
             <div class="ai-prompts">
-                <div class="ai-section-label">Pilihan Cepat & Knowledge Prompts</div>
+                <div class="ai-section-label">Pilihan Cepat & Knowledge Prompts SIM Aset</div>
                 <div class="row g-2">
                     <div class="col-md-4">
-                        <button type="button" class="ai-prompt-card" data-prompt="Jelaskan alur mutasi aset dan bagaimana peran Pimpinan dalam menyetujuinya">
+                        <button type="button" class="ai-prompt-card" data-prompt="Berikan ringkasan data inventaris aset di sistem saat ini: berapa total aset, berapa yang aktif, dipinjam, sedang maintenance, dan rusak?">
+                            <i class="bi bi-box-seam"></i>
+                            <span>Ringkasan status & inventaris aset</span>
+                            <i class="bi bi-arrow-up-right"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="ai-prompt-card" data-prompt="Bagaimana alur dan prosedur peminjaman aset di sistem ini, serta apa saja yang perlu diperiksa saat pengembalian aset?">
+                            <i class="bi bi-journal-check"></i>
+                            <span>Alur peminjaman & pengembalian</span>
+                            <i class="bi bi-arrow-up-right"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="ai-prompt-card" data-prompt="Jelaskan alur pengajuan mutasi lokasi aset oleh staf dan bagaimana mekanisme persetujuan (approval) oleh Pimpinan.">
                             <i class="bi bi-arrow-left-right"></i>
                             <span>Alur mutasi & approval pimpinan</span>
                             <i class="bi bi-arrow-up-right"></i>
                         </button>
                     </div>
                     <div class="col-md-4">
-                        <button type="button" class="ai-prompt-card" data-prompt="Cek data mesin Product ID L47230 pada dataset.csv dan jelaskan kondisi kegagalannya">
-                            <i class="bi bi-cpu"></i>
-                            <span>Cek mesin L47230 (Dataset)</span>
-                            <i class="bi bi-arrow-up-right"></i>
-                        </button>
-                    </div>
-                    <div class="col-md-4">
-                        <button type="button" class="ai-prompt-card" data-prompt="Apa saja indikator dan penyebab terjadinya Heat Dissipation Failure (HDF) pada mesin?">
-                            <i class="bi bi-thermometer-high"></i>
-                            <span>Penyebab kegagalan HDF</span>
-                            <i class="bi bi-arrow-up-right"></i>
-                        </button>
-                    </div>
-                    <div class="col-md-4">
-                        <button type="button" class="ai-prompt-card" data-prompt="Jika mesin Tipe L bekerja dengan torsi 65 Nm, RPM 1350, dan tool wear 210 menit, apakah berisiko mengalami failure?">
-                            <i class="bi bi-shield-exclamation"></i>
-                            <span>Diagnosa risiko sensor mesin</span>
-                            <i class="bi bi-arrow-up-right"></i>
-                        </button>
-                    </div>
-                    <div class="col-md-4">
-                        <button type="button" class="ai-prompt-card" data-prompt="Bagaimana SOP penanganan teknis jika ditemukan mesin atau aset operasional yang rusak di web ini?">
+                        <button type="button" class="ai-prompt-card" data-prompt="Bagaimana prosedur pencatatan pemeliharaan aset (maintenance), mulai dari keluhan kerusakan, penanganan teknisi, hingga realisasi biaya?">
                             <i class="bi bi-tools"></i>
-                            <span>SOP aset/mesin rusak</span>
+                            <span>SOP pemeliharaan & perbaikan aset</span>
                             <i class="bi bi-arrow-up-right"></i>
                         </button>
                     </div>
                     <div class="col-md-4">
-                        <button type="button" class="ai-prompt-card" data-prompt="Berikan ringkasan statistik dataset predictive maintenance dan kondisi aset saat ini di database">
-                            <i class="bi bi-file-earmark-bar-graph"></i>
-                            <span>Statistik dataset & database</span>
+                        <button type="button" class="ai-prompt-card" data-prompt="Bagaimana sistem mencatat riwayat aktivitas aset (audit trail) dan perubahan apa saja yang otomatis terekam dalam log aset?">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Riwayat aset & audit trail sistem</span>
+                            <i class="bi bi-arrow-up-right"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="ai-prompt-card" data-prompt="Jelaskan pembagian hak akses peran (Admin, Pimpinan, Staff, Peminjam) serta cara pengelolaan master data kategori, lokasi, dan vendor.">
+                            <i class="bi bi-shield-check"></i>
+                            <span>Hak akses peran & master data</span>
                             <i class="bi bi-arrow-up-right"></i>
                         </button>
                     </div>
@@ -199,12 +198,54 @@
 
 @push('scripts')
 <script>
-    document.querySelectorAll('[data-prompt]').forEach((card) => {
-        card.addEventListener('click', () => {
-            const prompt = document.getElementById('prompt');
-            prompt.value = card.dataset.prompt;
-            prompt.focus();
+    document.addEventListener('DOMContentLoaded', function () {
+        const promptTextarea = document.getElementById('prompt');
+        const chatForm = document.getElementById('aiChatForm');
+        const submitBtn = document.getElementById('btnSubmitAi');
+        const conversation = document.querySelector('.ai-conversation');
+
+        // Scroll riwayat obrolan ke bawah secara otomatis
+        if (conversation) {
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        // Klik kartu prompt cepat
+        document.querySelectorAll('[data-prompt]').forEach((card) => {
+            card.addEventListener('click', () => {
+                if (promptTextarea) {
+                    promptTextarea.value = card.dataset.prompt;
+                    promptTextarea.focus();
+                }
+            });
         });
+
+        // Tangani tombol Enter: Kirim pesan saat Enter, baris baru saat Shift + Enter
+        if (promptTextarea && chatForm) {
+            promptTextarea.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.isComposing) return; // Mencegah terkirim saat proses IME / autocomplete
+
+                    e.preventDefault(); // Cegah pembuatan baris/paragraf baru
+
+                    const trimmed = promptTextarea.value.trim();
+                    if (trimmed.length > 0) {
+                        if (typeof chatForm.requestSubmit === 'function') {
+                            chatForm.requestSubmit();
+                        } else {
+                            chatForm.submit();
+                        }
+                    }
+                }
+            });
+
+            // Efek loading saat formulir dikirim
+            chatForm.addEventListener('submit', function () {
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Mengirim...';
+                }
+            });
+        }
     });
 </script>
 @endpush

@@ -13,10 +13,10 @@ class VendorController extends Controller
 
         $vendors = Vendor::query()
             ->when($search, function ($query, $search) {
-                $query->where('nama', 'ilike', "%{$search}%")
-                    ->orWhere('kontak', 'ilike', "%{$search}%")
-                    ->orWhere('email', 'ilike', "%{$search}%")
-                    ->orWhere('alamat', 'ilike', "%{$search}%");
+                $query->where('nama', 'like', "%{$search}%")
+                    ->orWhere('kontak', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('alamat', 'like', "%{$search}%");
             })
             ->withCount('assets')
             ->latest()

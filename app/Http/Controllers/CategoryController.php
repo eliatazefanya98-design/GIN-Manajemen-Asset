@@ -16,8 +16,8 @@ class CategoryController extends Controller
 
         $categories = Category::query()
             ->when($search, function ($query, $search) {
-                $query->where('nama', 'ilike', "%{$search}%")
-                    ->orWhere('deskripsi', 'ilike', "%{$search}%");
+                $query->where('nama', 'like', "%{$search}%")
+                    ->orWhere('deskripsi', 'like', "%{$search}%");
             })
             ->withCount('assets')
             ->latest()

@@ -23,6 +23,7 @@ class SettingsController extends Controller
         $settings = $request->validate([
             'organization_name' => ['required', 'string', 'max:120'],
             'organization_unit' => ['required', 'string', 'max:120'],
+            'theme' => ['nullable', 'string', 'in:light,dark'],
             'asset_prefix' => ['required', 'string', 'max:20'],
             'asset_separator' => ['required', 'string', 'max:3'],
             'asset_digits' => ['required', 'integer', 'min:2', 'max:8'],

@@ -20,11 +20,11 @@ class AssetHistoryController extends Controller
             $search = $request->search;
 
             $query->where(function ($q) use ($search) {
-                $q->where('aktivitas', 'ilike', "%{$search}%")
-                    ->orWhere('deskripsi', 'ilike', "%{$search}%")
+                $q->where('aktivitas', 'like', "%{$search}%")
+                    ->orWhere('deskripsi', 'like', "%{$search}%")
                     ->orWhereHas('asset', function ($assetQuery) use ($search) {
-                        $assetQuery->where('kode_asset', 'ilike', "%{$search}%")
-                            ->orWhere('nama_asset', 'ilike', "%{$search}%");
+                        $assetQuery->where('kode_asset', 'like', "%{$search}%")
+                            ->orWhere('nama_asset', 'like', "%{$search}%");
                     });
             });
         }

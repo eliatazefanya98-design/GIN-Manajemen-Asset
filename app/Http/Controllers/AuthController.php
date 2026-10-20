@@ -25,13 +25,26 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->withErrors(['email' => 'Email atau kata sandi tidak sesuai.'])->onlyInput('email');
+        $user = User::where('email', $credentials['email'])->first();
+
+        if ($user) {
+            if (! password_get_info($user->password)['algo'] && $user->password === $credentials['password']) {
+                $user->password = Hash::make($credentials['password']);
+                $user->save();
+                Auth::login($user, $request->boolean('remember'));
+                $request->session()->regenerate();
+
+                return redirect($this->homeUrl(Auth::user()));
+            }
+
+            if (Auth::attempt($credentials, $request->boolean('remember'))) {
+                $request->session()->regenerate();
+
+                return redirect($this->homeUrl(Auth::user()));
+            }
         }
 
-        $request->session()->regenerate();
-
-        return redirect($this->homeUrl(Auth::user()));
+        return back()->withErrors(['email' => 'Email atau kata sandi tidak sesuai.'])->onlyInput('email');
     }
 
     public function showRegister()
