@@ -1,146 +1,154 @@
 @extends('layouts.app')
 
+@section('title', 'Detail Lokasi - ' . $location->nama)
+
 @section('content')
 <div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    {{-- HEADER --}}
+    <div class="dashboard-header">
         <div>
-            <h3 class="mb-1">Detail Lokasi</h3>
-            <p class="text-muted mb-0">
-                Informasi lokasi dan asset yang ditempatkan.
-            </p>
+            <h2>Detail Lokasi: {{ $location->nama }}</h2>
+            <p class="text-muted mb-0">Informasi spesifik lokasi dan daftar seluruh aset yang ditempatkan di sini.</p>
         </div>
 
         <div class="d-flex gap-2">
-            <a href="{{ route('locations.edit', $location) }}"
-               class="btn btn-warning">
-                Edit
+            <a href="{{ route('locations.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
             </a>
 
-            <a href="{{ route('locations.index') }}"
-               class="btn btn-secondary">
-                Kembali
+            @if(in_array(auth()->user()->role, ['admin', 'staff'], true))
+            <a href="{{ route('locations.edit', $location) }}" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-1"></i> Edit Lokasi
             </a>
+            @endif
         </div>
     </div>
 
-    <div class="row">
-
+    <div class="row g-4">
         {{-- INFORMASI LOKASI --}}
-        <div class="col-md-5 mb-4">
-
-            <div class="card shadow-sm">
-
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header">
-                    <strong>Informasi Lokasi</strong>
+                    <strong class="d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-geo-alt-fill text-primary"></i> Data Lokasi
+                    </strong>
                 </div>
 
                 <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small d-block">Nama Lokasi</label>
+                        <div class="fw-bold fs-5 text-dark">{{ $location->nama }}</div>
+                    </div>
 
-                    <table class="table table-borderless mb-0">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="text-muted small d-block">Gedung</label>
+                            <div class="fw-semibold">{{ $location->gedung ?? '-' }}</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="text-muted small d-block">Lantai</label>
+                            <div class="fw-semibold">{{ $location->lantai ?? '-' }}</div>
+                        </div>
+                    </div>
 
-                        <tr>
-                            <th width="40%">Nama</th>
-                            <td>{{ $location->nama }}</td>
-                        </tr>
+                    <div class="mb-3">
+                        <label class="text-muted small d-block">Ruangan</label>
+                        <div class="fw-semibold">{{ $location->ruangan ?? '-' }}</div>
+                    </div>
 
-                        <tr>
-                            <th>Gedung</th>
-                            <td>{{ $location->gedung ?? '-' }}</td>
-                        </tr>
+                    <div class="mb-3">
+                        <label class="text-muted small d-block">Deskripsi</label>
+                        <div class="p-2 bg-light rounded text-muted small mt-1">
+                            {{ $location->deskripsi ?: 'Tidak ada deskripsi.' }}
+                        </div>
+                    </div>
 
-                        <tr>
-                            <th>Lantai</th>
-                            <td>{{ $location->lantai ?? '-' }}</td>
-                        </tr>
+                    <hr class="my-3">
 
-                        <tr>
-                            <th>Ruangan</th>
-                            <td>{{ $location->ruangan ?? '-' }}</td>
-                        </tr>
-
-                        <tr>
-                            <th>Deskripsi</th>
-                            <td>{{ $location->deskripsi ?? '-' }}</td>
-                        </tr>
-
-                    </table>
-
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Total Aset di Lokasi Ini</span>
+                        <span class="badge bg-info fs-6">
+                            <i class="bi bi-box-seam me-1"></i> {{ $location->assets->count() }} aset
+                        </span>
+                    </div>
                 </div>
-
             </div>
-
         </div>
 
-        {{-- ASSET --}}
-        <div class="col-md-7 mb-4">
-
+        {{-- ASSET DALAM LOKASI --}}
+        <div class="col-lg-8">
             <div class="card shadow-sm">
-
-                <div class="card-header">
-                    <strong>Asset di Lokasi Ini</strong>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong class="d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-pc-display text-primary"></i> Aset di Lokasi Ini
+                        </strong>
+                        <small class="text-muted ms-2">Total: {{ $location->assets->count() }} aset</small>
+                    </div>
                 </div>
 
                 <div class="card-body p-0">
-
-                    <div class="table-responsive">
-
-                        <table class="table table-hover mb-0">
-
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Kode Asset</th>
-                                    <th>Nama Asset</th>
-                                    <th>Kondisi</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-
-                                @forelse($location->assets as $asset)
-
+                    @if($location->assets->count())
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
                                     <tr>
-                                        <td>
-                                            {{ $asset->kode_asset }}
-                                        </td>
-
-                                        <td>
-                                            {{ $asset->nama_asset }}
-                                        </td>
-
-                                        <td>
-                                            {{ $asset->kondisi }}
-                                        </td>
-
-                                        <td>
-                                            {{ $asset->status }}
-                                        </td>
+                                        <th>Kode Asset</th>
+                                        <th>Nama Asset</th>
+                                        <th>Kondisi</th>
+                                        <th>Status</th>
+                                        <th width="100" class="text-center">Aksi</th>
                                     </tr>
-
-                                @empty
-
-                                    <tr>
-                                        <td colspan="4"
-                                            class="text-center text-muted py-4">
-                                            Belum ada asset di lokasi ini.
-                                        </td>
-                                    </tr>
-
-                                @endforelse
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
+                                </thead>
+                                <tbody>
+                                    @foreach($location->assets as $asset)
+                                        <tr>
+                                            <td><strong>{{ $asset->kode_asset }}</strong></td>
+                                            <td>{{ $asset->nama_asset }}</td>
+                                            <td>
+                                                @if($asset->kondisi === 'Baik')
+                                                    <span class="badge bg-success">Baik</span>
+                                                @elseif($asset->kondisi === 'Rusak Ringan')
+                                                    <span class="badge bg-warning">Rusak Ringan</span>
+                                                @elseif($asset->kondisi === 'Rusak Berat')
+                                                    <span class="badge bg-danger">Rusak Berat</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $asset->kondisi }}</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($asset->status === 'Aktif')
+                                                    <span class="badge-status active">Aktif</span>
+                                                @elseif($asset->status === 'Dipinjam')
+                                                    <span class="badge-status borrowed">Dipinjam</span>
+                                                @elseif($asset->status === 'Maintenance')
+                                                    <span class="badge-status maintenance">Maintenance</span>
+                                                @elseif($asset->status === 'Rusak')
+                                                    <span class="badge-status damaged">Rusak</span>
+                                                @else
+                                                    <span class="badge-status secondary">{{ $asset->status }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="{{ route('assets.show', $asset) }}" class="btn btn-sm btn-outline-primary" title="Detail Asset">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>Belum ada aset yang ditempatkan pada lokasi ini.</p>
+                        </div>
+                    @endif
                 </div>
-
             </div>
-
         </div>
-
     </div>
 
 </div>

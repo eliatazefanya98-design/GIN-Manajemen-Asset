@@ -4,31 +4,34 @@
 <div class="container-fluid">
 
     {{-- HEADER --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="dashboard-header">
         <div>
-            <h3 class="mb-1">Edit Maintenance Record</h3>
+            <h2>Edit Maintenance Record</h2>
             <p class="text-muted mb-0">
-                Perbarui informasi maintenance aset
+                Perbarui catatan maintenance untuk aset <strong>{{ $maintenanceRecord->asset?->kode_asset }} · {{ $maintenanceRecord->asset?->nama_asset }}</strong>
             </p>
         </div>
 
-        <a
-            href="{{ route('maintenance-records.show', $maintenanceRecord) }}"
-            class="btn btn-secondary">
-            Kembali
-        </a>
+        <div>
+            <a href="{{ route('maintenance-records.show', $maintenanceRecord) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
+        </div>
     </div>
 
     {{-- ERROR --}}
     @if($errors->any())
-        <div class="alert alert-danger">
-            <strong>Terjadi kesalahan:</strong>
-
-            <ul class="mb-0 mt-2">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div>
+                <strong>Terjadi kesalahan:</strong>
+                <ul class="mb-0 mt-1 ps-3">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 

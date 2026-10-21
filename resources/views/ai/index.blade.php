@@ -3,14 +3,18 @@
 @section('title', 'AI Assistant')
 
 @section('content')
-<div class="ai-page">
-    <div class="ai-heading">
+<div class="container-fluid ai-page">
+    <div class="dashboard-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div>
-            <div class="ai-eyebrow"><i class="bi bi-stars"></i> ANTIGRAVITY AI ASSISTANT</div>
             <h2>AI Assistant</h2>
             <p class="text-muted mb-0">Tanyakan data inventaris aset, alur mutasi & approval, peminjaman, pemeliharaan, serta panduan fitur sistem SIM Aset.</p>
         </div>
-        <div class="ai-status"><span></span> AI aktif · Gemini 3.8 Flash Low</div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge-status badge-status-approved d-inline-flex align-items-center gap-2 py-2 px-3">
+                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
+                <span>AI Aktif · Assistant Real-Time</span>
+            </span>
+        </div>
     </div>
 
     <div class="row justify-content-center">

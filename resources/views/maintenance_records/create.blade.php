@@ -4,34 +4,43 @@
 <div class="container-fluid">
 
     {{-- HEADER --}}
-    <div class="mb-4">
-        <h3 class="mb-1">Tambah Maintenance</h3>
-        <p class="text-muted mb-0">
-            Tambahkan riwayat maintenance untuk asset.
-        </p>
-    </div>
+    <div class="dashboard-header">
+        <div>
+            <h2>Tambah Maintenance</h2>
+            <p class="text-muted mb-0">
+                Tambahkan catatan riwayat servis, pemeliharaan, atau perbaikan aset.
+            </p>
+        </div>
 
+        <div>
+            <a href="{{ route('maintenance-records.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
+        </div>
+    </div>
 
     {{-- ERROR --}}
     @if($errors->any())
-        <div class="alert alert-danger">
-
-            <strong>Terjadi kesalahan:</strong>
-
-            <ul class="mb-0 mt-2">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div>
+                <strong>Terjadi kesalahan:</strong>
+                <ul class="mb-0 mt-1 ps-3">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-
 
     <div class="card shadow-sm">
 
         <div class="card-header">
-            <strong>Informasi Maintenance</strong>
+            <strong class="d-inline-flex align-items-center gap-2">
+                <i class="bi bi-tools text-primary"></i> Formulir Catatan Maintenance
+            </strong>
         </div>
 
         <div class="card-body">

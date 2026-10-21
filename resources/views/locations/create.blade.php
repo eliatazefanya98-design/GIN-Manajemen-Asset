@@ -1,32 +1,40 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container-fluid">
+@section('title', 'Tambah Lokasi')
 
-    <div class="mb-4">
-        <h3 class="mb-1">Tambah Lokasi</h3>
-        <p class="text-muted mb-0">
-            Tambahkan lokasi baru untuk penempatan asset.
-        </p>
+@section('content')
+<div class="container-fluid" style="max-width: 900px">
+
+    {{-- HEADER --}}
+    <div class="dashboard-header">
+        <div>
+            <h2>Tambah Lokasi</h2>
+            <p class="text-muted mb-0">Tambahkan lokasi fisik baru untuk penempatan dan pelacakan aset.</p>
+        </div>
+
+        <div>
+            <a href="{{ route('locations.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
+        </div>
     </div>
 
     <div class="card shadow-sm">
+        <div class="card-header">
+            <strong class="d-inline-flex align-items-center gap-2">
+                <i class="bi bi-geo-alt-fill text-primary"></i> Formulir Data Lokasi
+            </strong>
+        </div>
 
         <div class="card-body">
-
-            <form action="{{ route('locations.store') }}"
-                  method="POST">
-
+            <form action="{{ route('locations.store') }}" method="POST">
                 @csrf
 
-                <div class="row">
-
-                    <div class="col-md-6 mb-3">
-
+                <div class="row g-3">
+                    <div class="col-md-6">
                         <label class="form-label">
                             Nama Lokasi <span class="text-danger">*</span>
                         </label>
-
                         <input
                             type="text"
                             name="nama"
@@ -35,21 +43,13 @@
                             placeholder="Contoh: Laboratorium Komputer"
                             required
                         >
-
                         @error('nama')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-
                     </div>
 
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Gedung
-                        </label>
-
+                    <div class="col-md-6">
+                        <label class="form-label">Gedung</label>
                         <input
                             type="text"
                             name="gedung"
@@ -57,21 +57,13 @@
                             value="{{ old('gedung') }}"
                             placeholder="Contoh: Gedung A"
                         >
-
                         @error('gedung')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-
                     </div>
 
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Lantai
-                        </label>
-
+                    <div class="col-md-6">
+                        <label class="form-label">Lantai</label>
                         <input
                             type="text"
                             name="lantai"
@@ -79,21 +71,13 @@
                             value="{{ old('lantai') }}"
                             placeholder="Contoh: Lantai 2"
                         >
-
                         @error('lantai')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-
                     </div>
 
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Ruangan
-                        </label>
-
+                    <div class="col-md-6">
+                        <label class="form-label">Ruangan</label>
                         <input
                             type="text"
                             name="ruangan"
@@ -101,56 +85,35 @@
                             value="{{ old('ruangan') }}"
                             placeholder="Contoh: R. 201"
                         >
-
                         @error('ruangan')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-
                     </div>
 
-                    <div class="col-12 mb-3">
-
-                        <label class="form-label">
-                            Deskripsi
-                        </label>
-
+                    <div class="col-12">
+                        <label class="form-label">Deskripsi</label>
                         <textarea
                             name="deskripsi"
                             rows="4"
                             class="form-control @error('deskripsi') is-invalid @enderror"
-                            placeholder="Deskripsi lokasi..."
+                            placeholder="Deskripsi atau patokan spesifik lokasi..."
                         >{{ old('deskripsi') }}</textarea>
-
                         @error('deskripsi')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-
                     </div>
-
                 </div>
 
-                <div class="d-flex gap-2">
-
-                    <a href="{{ route('locations.index') }}"
-                       class="btn btn-secondary">
-                        Kembali
-                    </a>
-
-                    <button type="submit"
-                            class="btn btn-primary">
-                        Simpan Lokasi
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-circle me-1"></i> Simpan Lokasi
                     </button>
-
+                    <a href="{{ route('locations.index') }}" class="btn btn-outline-secondary">
+                        Batal
+                    </a>
                 </div>
-
             </form>
-
         </div>
-
     </div>
 
 </div>

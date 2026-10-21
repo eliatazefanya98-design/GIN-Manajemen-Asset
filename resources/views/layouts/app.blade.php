@@ -91,7 +91,10 @@
 
 </div>
 
-<style>{!! file_get_contents(resource_path('css/app-ui.css')) !!}</style>
+<style>
+{!! file_get_contents(resource_path('css/app-ui.css')) !!}
+{!! file_get_contents(resource_path('css/theme.css')) !!}
+</style>
 
 @stack('styles')
 

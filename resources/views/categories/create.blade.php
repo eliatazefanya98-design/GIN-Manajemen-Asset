@@ -1,77 +1,84 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container py-4">
+@section('title', 'Tambah Kategori')
 
-    <div class="mb-4">
-        <h3>Tambah Kategori</h3>
-        <p class="text-muted">
-            Tambahkan kategori asset baru.
-        </p>
+@section('content')
+<div class="container-fluid" style="max-width: 900px">
+
+    {{-- HEADER --}}
+    <div class="dashboard-header">
+        <div>
+            <h2>Tambah Kategori</h2>
+            <p class="text-muted mb-0">Tambahkan kategori baru untuk pengelompokan aset sistem.</p>
+        </div>
+
+        <div>
+            <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
+        </div>
     </div>
 
     @if($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div>
+                <ul class="mb-0 ps-3">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
     <div class="card shadow-sm">
+        <div class="card-header">
+            <strong class="d-inline-flex align-items-center gap-2">
+                <i class="bi bi-tags-fill text-primary"></i> Formulir Kategori Aset
+            </strong>
+        </div>
+
         <div class="card-body">
-
-            <form action="{{ route('categories.store') }}"
-                  method="POST">
-
+            <form action="{{ route('categories.store') }}" method="POST">
                 @csrf
 
                 <div class="mb-3">
                     <label class="form-label">
-                        Nama Kategori
+                        Nama Kategori <span class="text-danger">*</span>
                     </label>
-
                     <input
                         type="text"
                         name="nama"
                         class="form-control"
                         value="{{ old('nama') }}"
-                        placeholder="Contoh: Laptop"
+                        placeholder="Contoh: Perangkat IT, Kendaraan, Mesin Produksi..."
                         required
                     >
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label">
                         Deskripsi
                     </label>
-
                     <textarea
                         name="deskripsi"
                         class="form-control"
                         rows="4"
-                        placeholder="Deskripsi kategori..."
+                        placeholder="Keterangan singkat mengenai kategori aset ini..."
                     >{{ old('deskripsi') }}</textarea>
                 </div>
 
                 <div class="d-flex gap-2">
-
-                    <a href="{{ route('categories.index') }}"
-                       class="btn btn-secondary">
-                        Kembali
-                    </a>
-
-                    <button type="submit"
-                            class="btn btn-primary">
-                        Simpan
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-circle me-1"></i> Simpan Kategori
                     </button>
-
+                    <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">
+                        Batal
+                    </a>
                 </div>
-
             </form>
-
         </div>
     </div>
 

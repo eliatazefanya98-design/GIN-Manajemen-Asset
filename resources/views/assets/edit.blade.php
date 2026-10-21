@@ -4,34 +4,43 @@
 <div class="container-fluid">
 
     {{-- HEADER --}}
-    <div class="mb-4">
-        <h3 class="mb-1">Edit Asset</h3>
-        <p class="text-muted mb-0">
-            Perbarui informasi asset yang sudah terdaftar.
-        </p>
-    </div>
+    <div class="dashboard-header">
+        <div>
+            <h2>Edit Asset</h2>
+            <p class="text-muted mb-0">
+                Perbarui informasi data aset <strong>{{ $asset->kode_asset }} · {{ $asset->nama_asset }}</strong>
+            </p>
+        </div>
 
+        <div>
+            <a href="{{ route('assets.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
+        </div>
+    </div>
 
     {{-- VALIDATION ERROR --}}
     @if($errors->any())
-        <div class="alert alert-danger">
-
-            <strong>Terjadi kesalahan:</strong>
-
-            <ul class="mb-0 mt-2">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div>
+                <strong>Terjadi kesalahan:</strong>
+                <ul class="mb-0 mt-1 ps-3">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-
 
     <div class="card shadow-sm">
 
         <div class="card-header">
-            <strong>Informasi Asset</strong>
+            <strong class="d-inline-flex align-items-center gap-2">
+                <i class="bi bi-pencil-square text-primary"></i> Formulir Perubahan Asset
+            </strong>
         </div>
 
         <div class="card-body">

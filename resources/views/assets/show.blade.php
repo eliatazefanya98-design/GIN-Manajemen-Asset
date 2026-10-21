@@ -4,36 +4,33 @@
 <div class="container-fluid">
 
     {{-- HEADER --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
+    <div class="dashboard-header">
         <div>
-            <h3 class="mb-1">Detail Asset</h3>
+            <h2>Detail Asset</h2>
             <p class="text-muted mb-0">
-                Informasi lengkap mengenai asset.
+                Informasi spesifikasi lengkap mengenai aset <strong>{{ $asset->kode_asset }} · {{ $asset->nama_asset }}</strong>
             </p>
         </div>
 
         <div class="d-flex gap-2">
-
-            <a href="{{ route('assets.index') }}"
-               class="btn btn-secondary">
-                Kembali
+            <a href="{{ route('assets.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
             </a>
 
-            <a href="{{ route('assets.edit', $asset) }}"
-               class="btn btn-warning">
-                Edit
+            @if(in_array(auth()->user()->role, ['admin', 'staff'], true))
+            <a href="{{ route('assets.edit', $asset) }}" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-1"></i> Edit Asset
             </a>
-
+            @endif
         </div>
-
     </div>
-
 
     {{-- SUCCESS MESSAGE --}}
     @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <div>{{ session('success') }}</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
