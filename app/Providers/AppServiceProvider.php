@@ -19,6 +19,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\View::composer('components.navbar', function ($view) {
+            $notificationData = ['unread_count' => 0, 'items' => []];
+
+            if (\Illuminate\Support\Facades\Auth::check()) {
+                $notificationData = app(\App\Services\NotificationService::class)->getNotifications(\Illuminate\Support\Facades\Auth::user());
+            }
+
+            $view->with('systemNotifications', $notificationData);
+        });
     }
 }
