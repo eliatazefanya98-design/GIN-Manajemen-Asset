@@ -100,4 +100,5 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'role:admin,staff,pimpinan'])->group(function () {
     Route::get('/ai', [AiController::class, 'index'])->name('ai.index');
     Route::post('/ai/chat', [AiController::class, 'chat'])->name('ai.chat');
+    Route::post('/ai/clear', [AiController::class, 'clear'])->name('ai.clear');
 });

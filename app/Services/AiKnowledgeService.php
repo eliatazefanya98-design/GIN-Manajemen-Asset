@@ -2,340 +2,228 @@
 
 namespace App\Services;
 
-use App\Models\AiPrediction;
 use App\Models\Asset;
-use App\Models\MaintenanceRecord;
-use App\Models\Transfer;
+use App\Models\AssetHistory;
+use App\Models\AssetLoan;
 use App\Models\Category;
 use App\Models\Location;
+use App\Models\MaintenanceRecord;
 use App\Models\SystemSetting;
-use Illuminate\Support\Facades\File;
+use App\Models\Transfer;
+use App\Models\User;
+use App\Models\Vendor;
+use Illuminate\Support\Collection;
 
 class AiKnowledgeService
 {
     /**
-     * Path ke file dataset.csv di root proyek
-     */
-    protected string $datasetPath;
-
-    public function __construct()
-    {
-        $this->datasetPath = base_path('dataset.csv');
-    }
-
-    /**
-     * Membangun prompt konteks komprehensif yang memadukan:
-     * 1. Knowledge Dataset Mesin & Predictive Maintenance (dataset.csv)
-     * 2. Hasil pencarian spesifik di dataset jika prompt menyebut Product ID / Tipe Kegagalan
-     * 3. Knowledge Dummy Sistem dan Fitur Website
-     * 4. Ringkasan data aktual dari PostgreSQL database
+     * Membangun prompt sistem komprehensif yang memadukan:
+     * 1. Aturan & batasan ruang lingkup asisten (khusus SIM Aset)
+     * 2. Panduan modul, alur kerja (SOP), dan hak akses peran pada sistem
+     * 3. Ringkasan statistik data aktual sistem dari database
+     * 4. Daftar rincian data inventaris aset riil dari database
+     * 5. Data riil master data (kategori, lokasi, vendor)
+     * 6. Catatan transaksi riil terkini (pemeliharaan, peminjaman, mutasi aset)
+     * 7. Pencarian spesifik relevan berdasarkan pertanyaan pengguna
      */
     public function buildSystemPrompt(string $userPrompt): string
     {
         $setting = SystemSetting::current();
-        $dbData = $this->getLiveDatabaseSummary();
-        $datasetStats = $this->getDatasetSummary();
-        $lookupContext = $this->searchDatasetRelevantContext($userPrompt);
+        $dbSummary = $this->getLiveDatabaseSummary();
+        $assetsList = $this->getAssetsInventoryText();
+        $masterData = $this->getMasterDataText();
+        $recentTransactions = $this->getRecentTransactionsText();
+        $searchContext = $this->searchDatabaseRelevantContext($userPrompt);
 
         $prompt = <<<EOT
-Anda adalah "GIN Intelligent Asset & Maintenance Assistant", sebuah asisten AI khusus untuk Sistem Informasi Manajemen Aset (SIM Aset) {$setting->organization_name} ({$setting->organization_unit}).
+Anda adalah "GIN Intelligent Asset Assistant", sebuah asisten AI resmi khusus untuk Sistem Informasi Manajemen Aset (SIM Aset) {$setting->organization_name} ({$setting->organization_unit}).
 
 ==================================================
 ATURAN MUTLAK & BATASAN RUANG LINGKUP (SANGAT KETAT)
 ==================================================
-1. Anda HANYA DAN WAJIB melayani topik yang berhubungan langsung dengan:
-   - Sistem Informasi Manajemen Aset (SIM Aset) ini: seluruh fitur web (Dashboard, Master Data, Manajemen Aset, Mutasi & Approval Pimpinan, Peminjaman Aset / Loans, Pemeliharaan / Maintenance Records, Riwayat Aset / Audit Trail, Laporan & Ekspor, Pengaturan Sistem), SOP prosedur, hak akses peran (Admin, Pimpinan, Staff, Peminjam), dan data inventaris yang ada di database.
-   - Dataset Predictive Maintenance (dataset.csv): data sensor telemetri operasional mesin pabrik (suhu udara, suhu proses, kecepatan RPM, torsi, keausan pahat/tool wear), 5 modus kegagalan (TWF, HDF, PWF, OSF, RNF), diagnostik kegagalan mesin, Product ID mesin, dan rekomendasi teknis perbaikan.
-   - Data inventaris aset, catatan servis, dan jadwal maintenance yang tersimpan di sistem.
+1. Anda HANYA DAN WAJIB melayani topik yang berkaitan langsung dengan Sistem Informasi Manajemen Aset (SIM Aset) ini:
+   - Data inventaris aset riil yang tercatat di database (spesifikasi, kode aset, status, kondisi, harga, lokasi, penanggung jawab, vendor).
+   - Seluruh modul dan fitur web aplikasi: Dashboard, Master Data (Kategori, Lokasi, Vendor), Manajemen Aset, Mutasi & Approval Pimpinan, Peminjaman Aset (Asset Loans), Pemeliharaan (Maintenance Records), Riwayat Aset (Audit Trail), Laporan & Ekspor (PDF/Excel), dan Pengaturan Sistem.
+   - Prosedur operasional standar (SOP), alur kerja transaksi aset, dan pembagian hak akses peran (Admin, Pimpinan, Staff, Peminjam).
 
 2. LARANGAN KERAS (ZERO-TOLERANCE OUT-OF-SCOPE):
-   - Anda DILARANG KERAS menjawab, melayani, atau memberikan informasi tentang topik di luar lingkup di atas!
-   - Termasuk dilarang menjawab: resep makanan/minuman (misal kue cubit, martabak, nasi goreng, kopi), hiburan, artis, musik, film, politik, olahraga, ramalan cuaca umum, percakapan santai non-sistem, cerita dongeng, lelucon, atau materi umum lainnya.
-   - JANGAN PERNAH memberikan resep atau jawaban di luar konteks meskipun sebagai basa-basi, selingan, atau pengantar!
+   - Anda DILARANG KERAS menjawab, melayani, atau memberikan panduan mengenai topik di luar lingkup SIM Aset di atas!
+   - Termasuk dilarang menjawab: resep makanan atau minuman (misalnya resep kue cubit, martabak, nasi goreng, racikan kopi, masakan rumahan), hiburan, gosip, film, musik, artis, politik, olahraga, ramalan cuaca umum, cerita fiksi, puisi, lelucon, atau percakapan santai yang tidak berhubungan dengan sistem aset.
+   - JANGAN PERNAH menyajikan resep atau materi umum tersebut meskipun pengguna meminta sebagai selingan, analogi, atau basa-basi!
 
 3. ATURAN PENOLAKAN WAJIB:
-   - Jika pengguna menanyakan hal yang melenceng atau di luar konteks SIM Aset maupun dataset mesin (misal: "apa resep kue cubit", "siapa presiden...", "buatkan puisi", dsb.), Anda WAJIB MENOLAK secara tegas dan sopan, lalu mengarahkan kembali ke topik sistem aset.
-   - Gunakan kalimat penolakan tegas seperti contoh berikut:
-     "Maaf, saya adalah asisten khusus Sistem Informasi Manajemen Aset (SIM Aset) dan analisis Predictive Maintenance mesin. Saya hanya dapat menjawab pertanyaan seputar inventaris aset, alur mutasi & persetujuan, peminjaman, pemeliharaan teknis, serta analisis dataset sensor mesin pabrik. Silakan tanyakan hal yang berkaitan dengan sistem atau pemeliharaan aset."
+   - Jika pengguna menanyakan hal yang melenceng dari topik sistem aset (misalnya: "apa resep kue cubit", "siapa presiden...", "buatkan puisi cinta", dsb.), Anda WAJIB MENOLAK secara tegas dan sopan, lalu mengarahkan kembali ke topik sistem aset.
+   - Gunakan format penolakan tegas seperti contoh berikut:
+     "Maaf, saya adalah asisten khusus Sistem Informasi Manajemen Aset (SIM Aset). Saya hanya dapat melayani pertanyaan seputar data inventaris aset, pemeliharaan teknis, alur mutasi & approval, peminjaman aset, serta panduan operasional sistem ini. Silakan tanyakan hal yang berkaitan dengan aset atau fitur sistem."
 
 ==================================================
-1. KNOWLEDGE DATASET PREDICTIVE MAINTENANCE (dataset.csv)
+1. PANDUAN MODUL, ALUR KERJA (SOP) & FITUR SISTEM
 ==================================================
-File `dataset.csv` berisi 10.000 rekaman operasional mesin pabrik (AI4I 2020 Predictive Maintenance Dataset) dengan atribut sensor fisik:
-- Total Data: {$datasetStats['total_rows']} baris
-- Total Kegagalan Mesin (Machine Failure = 1): {$datasetStats['total_failures']} ({$datasetStats['failure_rate']}%)
-- Distribusi Tipe Mesin:
-  * Tipe L (Low quality/variant, 50% produk, misal L47181): Varian standar dengan toleransi beban lebih rendah.
-  * Tipe M (Medium quality/variant, 30% produk, misal M14860): Varian menengah.
-  * Tipe H (High quality/variant, 20% produk, misal H29424): Varian presisi tinggi dengan toleransi beban lebih kuat.
+Sistem ini adalah aplikasi web lengkap berbasis Laravel 11 dan PostgreSQL untuk tata kelola siklus hidup aset:
 
-- Modus Kegagalan & Rumus Fisika Penentu:
-  1. TWF (Tool Wear Failure):
-     - Terjadi jika keausan alat (Tool wear [min]) mencapai 200 hingga 240 menit.
-     - Rekomendasi: Lakukan penggantian mata pahat/tool secara berkala sebelum 200 menit operasional.
-  2. HDF (Heat Dissipation Failure):
-     - Terjadi jika perbedaan suhu (Process temperature - Air temperature) < 8.6 K DAN kecepatan putaran (Rotational speed) < 1380 rpm.
-     - Rekomendasi: Periksa sistem pendingin (coolant/radiator) dan jangan operasikan mesin pada RPM terlalu rendah saat beban panas tinggi.
-  3. PWF (Power Failure):
-     - Daya mekanik mesin dihitung dari: P = Torsi [Nm] × (Rotational speed [rpm] × 2π / 60).
-     - Terjadi jika daya P < 3500 Watt (mesin tertahan/stalling) atau P > 9000 Watt (overload/beban berlebih).
-     - Rekomendasi: Kalibrasi beban torsi dan sesuaikan RPM agar daya selalu berada di zona aman 3500 W - 9000 W.
-  4. OSF (Overstrain Failure):
-     - Terjadi jika perkalian Tool Wear [min] × Torsi [Nm] melampaui ambang batas:
-       * Tipe L: > 11.000 min·Nm
-       * Tipe M: > 12.000 min·Nm
-       * Tipe H: > 13.000 min·Nm
-     - Rekomendasi: Kurangi beban potong/torsi jika tool wear sudah tinggi untuk mencegah patah lelah bahan.
-  5. RNF (Random Failure):
-     - Kerusakan acak yang tidak berkorelasi langsung dengan parameter (probabilitas ~0.1%).
-
-{$lookupContext}
-
-==================================================
-2. KNOWLEDGE SISTEM & FITUR WEBSITE (SIM ASET)
-==================================================
-Sistem ini adalah aplikasi web lengkap berbasis Laravel 11 dan PostgreSQL untuk mengelola aset organisasi:
-A. Modul & Fitur Utama:
+A. Fitur & Modul Utama:
    1. Dashboard (/dashboard):
-      - Menampilkan kartu metrik (Total Aset, Aset Aktif, Aset Maintenance, Aset Rusak).
-      - Menampilkan metrik pemeliharaan (Total, Terjadwal, Proses, Selesai) dan Pending Approval Mutasi.
-      - Grafik visualisasi distribusi aset per kategori dan per status aset.
-      - Feed 5 aset terbaru dan 5 pemeliharaan terbaru.
+      - Kartu metrik: Total Aset, Aset Aktif, Aset Maintenance, Aset Rusak, dan total valuasi perolehan aset.
+      - Metrik pemeliharaan (Total, Terjadwal, Proses, Selesai) dan status pengajuan mutasi menunggu persetujuan pimpinan.
+      - Visualisasi grafik distribusi aset per kategori dan per status aset.
+      - Log kilas 5 aset terbaru dan 5 riwayat pemeliharaan terbaru.
    2. Master Data:
-      - Kategori (/categories): Pengelompokan aset (IT, Sekretariat, Mesin Pabrik, Kendaraan).
-      - Lokasi (/locations): Lokasi fisik mencakup Nama, Gedung, Lantai, dan Ruangan.
-      - Vendor (/vendors): Rekanan pengadaan dan servis (Nama, Kontak telepon, Email, Alamat).
+      - Kategori (/categories): Pengelompokan jenis aset (misal: IT, Sekretariat, Elektronik, Kendaraan).
+      - Lokasi (/locations): Lokasi fisik mencakup Nama Lokasi, Gedung, Lantai, Ruangan, dan Deskripsi.
+      - Vendor (/vendors): Rekanan pengadaan dan perbaikan aset mencakup Nama Perusahaan, Kontak Telepon, Email, dan Alamat.
    3. Manajemen Aset (/assets):
-      - Penomoran kode otomatis sesuai aturan format (default: AST-GIN-0001).
-      - Pencatatan atribut: Kode, Nama Aset, Merk, Tipe, Kategori, Lokasi, Vendor, Tanggal Perolehan, Harga, Penanggung Jawab.
+      - Penomoran kode aset otomatis berdasarkan pola pengaturan sistem (Format saat ini: {$setting->asset_prefix}{$setting->asset_separator}XXXX).
+      - Pencatatan atribut komprehensif: Kode Aset, Nama Aset, Kategori, Lokasi Fisik, Vendor Rekanan, Merk, Tipe, Tanggal Perolehan, Harga Perolehan, Status, Kondisi, Penanggung Jawab, dan Deskripsi.
       - Status Aset: Aktif, Dipinjam, Maintenance, Rusak, Dihapus.
       - Kondisi Aset: Baik, Rusak Ringan, Rusak Berat.
    4. Mutasi / Transfer Lokasi Aset (/transfers & /approvals):
-      - Alur Mutasi: Staff mengajukan pemindahan aset dari lokasi asal ke lokasi tujuan disertai alasan mutasi.
-      - Status transfer: 'menunggu', 'disetujui', 'ditolak'.
-      - Alur Persetujuan (Approval): Pimpinan meninjau pengajuan di halaman /approvals. Jika disetujui, lokasi aset otomatis terupdate di database dan tercatat di riwayat aset. Jika ditolak, Pimpinan wajib memberi catatan penolakan.
+      - Alur Pengajuan: Staff mengajukan pemindahan aset dari lokasi asal ke lokasi tujuan disertai alasan mutasi.
+      - Status mutasi: 'menunggu', 'disetujui', 'ditolak'.
+      - Alur Persetujuan (Approval): Pimpinan meninjau pengajuan di menu /approvals. Jika disetujui, lokasi aset otomatis terupdate di database dan tercatat di riwayat aset (audit trail). Jika ditolak, Pimpinan wajib memberikan catatan alasan penolakan.
    5. Peminjaman Aset / Asset Loans (/borrowings):
-      - Peminjam (User) dapat melihat katalog aset aktif dan mengajukan peminjaman.
+      - Peminjam (User) melihat katalog aset dengan status 'Aktif' dan mengajukan peminjaman.
       - Mengisi tanggal pinjam, rencana tanggal kembali, dan keperluan peminjaman.
       - Status peminjaman: Diajukan, Dipinjam, Dikembalikan, Ditolak.
-      - Saat dikembalikan, staf memeriksa kondisi sebelum vs kondisi sesudah dan tanggal aktual pengembalian.
+      - Saat pengembalian: Dilakukan inspeksi kondisi sebelum vs kondisi sesudah dan tanggal aktual kembali. Jika aset kembali dalam kondisi rusak, status aset otomatis berubah menjadi 'Maintenance'.
    6. Pemeliharaan / Maintenance Records (/maintenance-records):
-      - Mencatat keluhan, jenis servis (Rutin, Perbaikan, Kalibrasi), detail kerusakan teknis, teknisi pelaksana, estimasi & realisasi biaya, tindakan perbaikan, dan perubahan status (Terjadwal -> Proses -> Selesai / Dibatalkan).
+      - Pencatatan keluhan masalah aset, jenis pemeliharaan (Rutin, Perbaikan, Kalibrasi), detail kerusakan teknis, teknisi pelaksana, estimasi & realisasi biaya, dan tindakan penanganan.
+      - Alur status: Terjadwal -> Proses -> Selesai / Dibatalkan.
    7. Riwayat Aset / Audit Trail (/asset-histories):
-      - Log otomatis yang tidak bisa dihapus: merekam setiap penambahan aset, perubahan kondisi/status, mutasi lokasi, peminjaman, dan pemeliharaan.
+      - Rekam jejak tidak dapat diubah (immutable log) yang mencatat penambahan aset, perubahan kondisi/status, mutasi lokasi, peminjaman, dan penanganan pemeliharaan.
    8. Laporan & Ekspor (/reports):
-      - Rekapitulasi aset dan biaya maintenance dengan ekspor format PDF & Excel.
+      - Rekapitulasi aset dan biaya pemeliharaan dengan filter rentang waktu tanggal perolehan, kategori, dan status.
+      - Ekspor resmi dalam format PDF dan Excel (.xlsx).
    9. Pengaturan Sistem (/settings):
-      - Khusus Admin: Mengatur identitas instansi, unit kerja, format kode aset (prefix, separator, digits, counter), dan logo resmi.
-   10. Asisten AI & Prediksi (/ai):
-      - Konsultasi pintar terintegrasi dengan Antigravity LLM API (Gemini 3.8 Flash Low).
+      - Konfigurasi nama instansi, divisi/unit kerja, format kode aset otomatis (prefix, separator, digits, counter), serta preferensi tema tampilan (terang / gelap).
+   10. Asisten AI (/ai):
+      - Asisten konsultasi cerdas terintegrasi untuk membaca data aset riil di sistem dan memandu operasional.
 
-B. Aturan Peran (Role-Based Access Control):
-   - Admin: Hak akses penuh ke seluruh menu, kelola user & role (/users), pengaturan sistem (/settings), master data, aset, mutasi, maintenance.
-   - Pimpinan: Akses Dashboard, menyetujui/menolak mutasi aset (/approvals), melihat laporan & ekspor (/reports), konsultasi AI.
-   - Staff: Mengelola data aset, mencatat pemeliharaan, mengajukan transfer lokasi aset, melihat riwayat peminjaman.
-   - Peminjam (User Umum): Mendaftar akun mandiri (role default peminjam), mengajukan peminjaman aset, memproses pengembalian.
-
-C. Aset Dummy Mesin yang Terhubung ke Dataset:
-   - AST-GIN-0004: Mesin CNC Milling Type L (Model ID: L47230, Status: Maintenance, Kondisi: Rusak Ringan, Lokasi: Ruang Workshop Produksi, terindikasi Power Failure PWF).
-   - AST-GIN-0005: Mesin Bubut Presisi Type M (Model ID: M14860, Status: Aktif, Kondisi: Baik, Lokasi: Ruang Workshop Fabrikasi, RPM 1551, Torsi 42.8 Nm).
-   - AST-GIN-0006: Mesin High-Precision Grinding Type H (Model ID: H29424, Status: Aktif, Kondisi: Baik, Lokasi: Lab Kalibrasi, RPM 1782, Torsi 23.9 Nm).
-   - AST-GIN-0001: Laptop Lenovo Ideapad Slim 3 (Kategori: IT, Lokasi: Lab Komputer 1).
-   - AST-02: Laptop Lenovo Ideapad (Kategori: IT).
-   - AST-03: Rak Meja Kayu Jati (Kategori: Sekretariat).
+B. Pembagian Hak Akses Peran (Role-Based Access Control):
+   - Admin: Hak akses penuh ke seluruh menu, kelola user & role (/users), pengaturan instansi (/settings), master data, aset, mutasi, dan maintenance.
+   - Pimpinan: Akses Dashboard eksekutif, menyetujui/menolak pengajuan mutasi lokasi aset (/approvals), melihat laporan & ekspor (/reports), serta riwayat aset.
+   - Staff: Menambah dan mengelola data aset, mencatat pemeliharaan teknis, mengajukan mutasi lokasi aset, dan meninjau peminjaman.
+   - Peminjam (User): Registrasi mandiri, menjelajahi katalog aset aktif, mengajukan peminjaman aset, memproses pengembalian, dan melihat riwayat peminjaman pribadi.
 
 ==================================================
-3. DATA AKTUAL DATABASE (LIVE POSTGRESQL CONTEXT)
+2. DATA AKTUAL SISTEM (LIVE DATABASE STATS)
 ==================================================
-- Nama Instansi: {$setting->organization_name} ({$setting->organization_unit})
-- Total Aset Terdaftar: {$dbData['total_assets']} unit
-  * Aset Aktif: {$dbData['active_assets']}
-  * Aset Sedang Maintenance: {$dbData['maintenance_assets']}
-  * Aset Rusak: {$dbData['damaged_assets']}
-- Pemeliharaan: Total {$dbData['total_maintenance']} catatan (Bulan ini: {$dbData['maintenance_this_month']} kegiatan)
-- Pengajuan Mutasi Menunggu Persetujuan: {$dbData['pending_transfers']} pengajuan
-- Data Prediksi AI Tersimpan: {$dbData['prediction_count']} data (Risiko Tinggi: {$dbData['high_risk_count']})
+- Nama Instansi / Organisasi: {$setting->organization_name}
+- Unit Kerja: {$setting->organization_unit}
+- Format Kode Aset: Prefix '{$setting->asset_prefix}', Separator '{$setting->asset_separator}', Jumlah Digit {$setting->asset_digits} (Nomor berikutnya: {$setting->asset_next_number})
+- Statistik Aset:
+  * Total Aset Terdaftar: {$dbSummary['total_assets']} unit
+  * Total Nilai Valuasi Aset: Rp {$dbSummary['total_asset_value']}
+  * Aset Aktif: {$dbSummary['active_assets']} unit
+  * Aset Dipinjam: {$dbSummary['borrowed_assets']} unit
+  * Aset Sedang Maintenance: {$dbSummary['maintenance_assets']} unit
+  * Aset Rusak: {$dbSummary['damaged_assets']} unit
+  * Kondisi Aset: {$dbSummary['good_condition']} Baik, {$dbSummary['minor_damage_condition']} Rusak Ringan, {$dbSummary['heavy_damage_condition']} Rusak Berat
+- Master Data:
+  * Kategori: {$dbSummary['total_categories']} kategori
+  * Lokasi Fisik: {$dbSummary['total_locations']} lokasi
+  * Vendor Rekanan: {$dbSummary['total_vendors']} rekanan
+- Transaksi & Pemeliharaan:
+  * Total Catatan Pemeliharaan: {$dbSummary['total_maintenance']} catatan
+  * Total Biaya Pemeliharaan: Rp {$dbSummary['total_maintenance_cost']}
+  * Pengajuan Mutasi Menunggu Approval: {$dbSummary['pending_transfers']} pengajuan
+  * Peminjaman Sedang Berjalan (Aktif): {$dbSummary['active_loans']} peminjaman
+  * Total Pengguna Terdaftar: {$dbSummary['total_users']} pengguna ({$dbSummary['admin_users']} Admin, {$dbSummary['pimpinan_users']} Pimpinan, {$dbSummary['staff_users']} Staff, {$dbSummary['peminjam_users']} Peminjam)
 
 ==================================================
-INSTRUKSI EVALUASI PERTANYAAN (WAJIB DIIKUTI):
+3. DAFTAR INVENTARIS ASET RIIL DI SISTEM
 ==================================================
-1. Evaluasi pertanyaan pengguna: Apakah berkaitan langsung dengan SIM Aset, fitur web ini, prosedur inventaris/mutasi/pinjam/maintenance, atau dataset sensor mesin pabrik?
-2. JIKA DI LUAR TOPIK (CONTOH: RESEP MAKANAN SEPERTI KUE CUBIT, GOSIP, POLITIK, PUISI, CHAT SANTAI UMUM):
-   - JANGAN PERNAH MENJAWAB PERTANYAAN TERSEBUT!
-   - JANGAN BERIKAN RESEP, JANGAN BERIKAN TIPS MEMASAK, JANGAN BERIKAN CERITA LAIN!
-   - Langsung berikan penolakan sopan dan to the point:
-     "Maaf, saya adalah asisten khusus Sistem Informasi Manajemen Aset (SIM Aset) dan analisis Predictive Maintenance mesin. Saya tidak dapat melayani pertanyaan di luar konteks sistem ini. Silakan ajukan pertanyaan terkait inventaris aset, pemeliharaan, alur fitur aplikasi, atau analisis dataset sensor mesin."
-3. JIKA BERKAITAN DENGAN SISTEM / DATASET:
-   - Berikan jawaban yang komprehensif, akurat, solutif, dan rapi dalam format Markdown.
+Berikut adalah seluruh daftar aset yang tercatat di database saat ini:
+{$assetsList}
+
+==================================================
+4. DATA MASTER (KATEGORI, LOKASI & VENDOR)
+==================================================
+{$masterData}
+
+==================================================
+5. CATATAN OPERASIONAL & TRANSAKSI TERBARU
+==================================================
+{$recentTransactions}
+
+{$searchContext}
+
+==================================================
+PETUNJUK PENYUSUNAN JAWABAN:
+==================================================
+1. Evaluasi pertanyaan pengguna: Pastikan berkaitan dengan SIM Aset, inventaris aset, pemeliharaan, mutasi, peminjaman, master data, atau fitur aplikasi ini.
+2. Jika pengguna menanyakan aset tertentu: Selalu gunakan data aktual di atas (kode aset, nama aset, lokasi, status, kondisi, penanggung jawab, harga, vendor).
+3. Jika aset yang ditanyakan pengguna tidak tertera dalam daftar data sistem di atas, katakan dengan jelas bahwa aset tersebut belum tercatat di database SIM Aset.
+4. Jawablah dengan bahasa Indonesia yang jelas, profesional, runtut, dan terstruktur rapi menggunakan format Markdown (tabel, poin-poin, bold).
+5. Tolak dengan tegas dan sopan apabila ada pertanyaan di luar konteks SIM Aset (seperti resep makanan, hiburan, politik, atau percakapan umum non-sistem).
 EOT;
 
         return $prompt;
     }
 
     /**
-     * Mengambil ringkasan statistik dataset.csv
+     * Mengambil statistik ringkas dari database sistem
      */
-    public function getDatasetSummary(): array
+    public function getLiveDatabaseSummary(): array
     {
+        $totalValue = (float) Asset::sum('harga');
+        $totalCost = (float) MaintenanceRecord::sum('biaya');
+
         return [
-            'total_rows' => 10000,
-            'total_failures' => 339,
-            'failure_rate' => 3.39,
-            'twf_count' => 46,
-            'hdf_count' => 115,
-            'pwf_count' => 95,
-            'osf_count' => 98,
-            'rnf_count' => 18,
-            'type_distribution' => [
-                'L' => '50% (5.000 unit)',
-                'M' => '30% (3.000 unit)',
-                'H' => '20% (2.000 unit)',
-            ],
+            'total_assets' => Asset::count(),
+            'total_asset_value' => number_format($totalValue, 0, ',', '.'),
+            'active_assets' => Asset::whereRaw('LOWER(status) = ?', ['aktif'])->count(),
+            'borrowed_assets' => Asset::whereRaw('LOWER(status) = ?', ['dipinjam'])->count(),
+            'maintenance_assets' => Asset::whereRaw('LOWER(status) = ?', ['maintenance'])->count(),
+            'damaged_assets' => Asset::whereRaw('LOWER(status) = ?', ['rusak'])->count(),
+            'good_condition' => Asset::whereRaw('LOWER(kondisi) = ?', ['baik'])->count(),
+            'minor_damage_condition' => Asset::whereRaw('LOWER(kondisi) LIKE ?', ['%rusak ringan%'])->count(),
+            'heavy_damage_condition' => Asset::whereRaw('LOWER(kondisi) LIKE ?', ['%rusak berat%'])->count(),
+            'total_categories' => Category::count(),
+            'total_locations' => Location::count(),
+            'total_vendors' => Vendor::count(),
+            'total_maintenance' => MaintenanceRecord::count(),
+            'total_maintenance_cost' => number_format($totalCost, 0, ',', '.'),
+            'pending_transfers' => Transfer::where('status', 'menunggu')->count(),
+            'active_loans' => AssetLoan::whereIn('status', ['Dipinjam', 'dipinjam', 'Diajukan', 'diajukan'])->count(),
+            'total_users' => User::count(),
+            'admin_users' => User::where('role', 'admin')->count(),
+            'pimpinan_users' => User::where('role', 'pimpinan')->count(),
+            'staff_users' => User::where('role', 'staff')->count(),
+            'peminjam_users' => User::where('role', 'peminjam')->count(),
         ];
     }
 
     /**
-     * Memeriksa prompt pengguna untuk mencari Product ID atau tipe kegagalan di dataset.csv
+     * Menyusun tabel Markdown daftar inventaris aset aktual dari database
      */
-    protected function searchDatasetRelevantContext(string $userPrompt): string
+    public function getAssetsInventoryText(int $limit = 50): string
     {
-        if (!File::exists($this->datasetPath)) {
-            return '';
-        }
+        $assets = Asset::with(['category', 'location', 'vendor'])
+            ->orderBy('id', 'asc')
+            ->take($limit)
+            ->get();
 
-        $contextChunks = [];
-
-        // 1. Cek apakah ada pola Product ID (L12345, M12345, H12345) atau UDI
-        if (preg_match_all('/\b([LMH]\d{5})\b/i', $userPrompt, $matches)) {
-            $productIds = array_unique(array_map('strtoupper', $matches[1]));
-            $foundRows = $this->lookupProductIdsInCsv($productIds);
-
-            if (!empty($foundRows)) {
-                $contextChunks[] = "HASIL PENCARIAN DATASET UNTUK PRODUCT ID YANG DISEBUT:\n" . $this->formatCsvRowsAsMarkdownTable($foundRows);
-            }
-        }
-
-        // 2. Cek apakah pengguna meminta contoh kegagalan spesifik
-        $lowerPrompt = strtolower($userPrompt);
-        if (str_contains($lowerPrompt, 'hdf') || str_contains($lowerPrompt, 'heat dissipation')) {
-            $samples = $this->getSampleFailuresByColumn('HDF', 3);
-            if (!empty($samples)) {
-                $contextChunks[] = "CONTOH REKAMAN MESIN DENGAN HEAT DISSIPATION FAILURE (HDF = 1):\n" . $this->formatCsvRowsAsMarkdownTable($samples);
-            }
-        } elseif (str_contains($lowerPrompt, 'pwf') || str_contains($lowerPrompt, 'power failure')) {
-            $samples = $this->getSampleFailuresByColumn('PWF', 3);
-            if (!empty($samples)) {
-                $contextChunks[] = "CONTOH REKAMAN MESIN DENGAN POWER FAILURE (PWF = 1):\n" . $this->formatCsvRowsAsMarkdownTable($samples);
-            }
-        } elseif (str_contains($lowerPrompt, 'osf') || str_contains($lowerPrompt, 'overstrain')) {
-            $samples = $this->getSampleFailuresByColumn('OSF', 3);
-            if (!empty($samples)) {
-                $contextChunks[] = "CONTOH REKAMAN MESIN DENGAN OVERSTRAIN FAILURE (OSF = 1):\n" . $this->formatCsvRowsAsMarkdownTable($samples);
-            }
-        } elseif (str_contains($lowerPrompt, 'twf') || str_contains($lowerPrompt, 'tool wear failure')) {
-            $samples = $this->getSampleFailuresByColumn('TWF', 3);
-            if (!empty($samples)) {
-                $contextChunks[] = "CONTOH REKAMAN MESIN DENGAN TOOL WEAR FAILURE (TWF = 1):\n" . $this->formatCsvRowsAsMarkdownTable($samples);
-            }
-        }
-
-        return !empty($contextChunks) ? implode("\n\n", $contextChunks) : '';
-    }
-
-    /**
-     * Mencari data baris di dataset.csv berdasarkan daftar Product ID
-     */
-    public function lookupProductIdsInCsv(array $productIds): array
-    {
-        if (!File::exists($this->datasetPath) || empty($productIds)) {
-            return [];
-        }
-
-        $results = [];
-        $handle = fopen($this->datasetPath, 'r');
-        if (!$handle) {
-            return [];
-        }
-
-        $header = fgetcsv($handle);
-        $searchMap = array_flip($productIds);
-
-        while (($row = fgetcsv($handle)) !== false) {
-            if (isset($row[1]) && isset($searchMap[strtoupper(trim($row[1]))])) {
-                $results[] = array_combine($header, $row);
-                if (count($results) >= count($productIds)) {
-                    break;
-                }
-            }
-        }
-
-        fclose($handle);
-        return $results;
-    }
-
-    /**
-     * Mengambil sampel data baris yang mengalami kegagalan tertentu
-     */
-    public function getSampleFailuresByColumn(string $columnName, int $limit = 3): array
-    {
-        if (!File::exists($this->datasetPath)) {
-            return [];
-        }
-
-        $results = [];
-        $handle = fopen($this->datasetPath, 'r');
-        if (!$handle) {
-            return [];
-        }
-
-        $header = fgetcsv($handle);
-        $colIndex = array_search($columnName, $header, true);
-
-        if ($colIndex === false) {
-            fclose($handle);
-            return [];
-        }
-
-        while (($row = fgetcsv($handle)) !== false) {
-            if (isset($row[$colIndex]) && (int)$row[$colIndex] === 1) {
-                $results[] = array_combine($header, $row);
-                if (count($results) >= $limit) {
-                    break;
-                }
-            }
-        }
-
-        fclose($handle);
-        return $results;
-    }
-
-    /**
-     * Format array baris CSV menjadi format teks yang mudah dibaca AI
-     */
-    protected function formatCsvRowsAsMarkdownTable(array $rows): string
-    {
-        if (empty($rows)) {
-            return '';
+        if ($assets->isEmpty()) {
+            return "Belum ada aset yang tercatat di database.";
         }
 
         $lines = [];
-        foreach ($rows as $row) {
+        $lines[] = "| Kode Aset | Nama Aset | Kategori | Lokasi | Status | Kondisi | Harga | Penanggung Jawab | Vendor |";
+        $lines[] = "|---|---|---|---|---|---|---|---|---|";
+
+        foreach ($assets as $asset) {
+            $formattedPrice = 'Rp ' . number_format((float)$asset->harga, 0, ',', '.');
             $lines[] = sprintf(
-                "- Product ID: %s (Type %s, UDI: %s) | Air Temp: %s K | Process Temp: %s K | Speed: %s rpm | Torque: %s Nm | Tool Wear: %s min | Failure: %s (TWF:%s, HDF:%s, PWF:%s, OSF:%s, RNF:%s)",
-                $row['Product ID'] ?? '-',
-                $row['Type'] ?? '-',
-                $row['UDI'] ?? '-',
-                $row['Air temperature [K]'] ?? '-',
-                $row['Process temperature [K]'] ?? '-',
-                $row['Rotational speed [rpm]'] ?? '-',
-                $row['Torque [Nm]'] ?? '-',
-                $row['Tool wear [min]'] ?? '-',
-                $row['Machine failure'] ?? '0',
-                $row['TWF'] ?? '0',
-                $row['HDF'] ?? '0',
-                $row['PWF'] ?? '0',
-                $row['OSF'] ?? '0',
-                $row['RNF'] ?? '0'
+                "| %s | %s | %s | %s | %s | %s | %s | %s | %s |",
+                $asset->kode_asset,
+                $asset->nama_asset,
+                $asset->category->nama ?? '-',
+                $asset->location->nama ?? '-',
+                $asset->status,
+                $asset->kondisi,
+                $formattedPrice,
+                $asset->penanggung_jawab ?: '-',
+                $asset->vendor->nama ?? '-'
             );
         }
 
@@ -343,23 +231,225 @@ EOT;
     }
 
     /**
-     * Mengambil statistik ringkas dari database PostgreSQL
+     * Menyusun data master (kategori, lokasi, vendor)
      */
-    protected function getLiveDatabaseSummary(): array
+    public function getMasterDataText(): string
     {
-        return [
-            'total_assets' => Asset::count(),
-            'active_assets' => Asset::whereRaw('LOWER(status) = ?', ['aktif'])->count(),
-            'maintenance_assets' => Asset::whereRaw('LOWER(status) = ?', ['maintenance'])->count(),
-            'damaged_assets' => Asset::whereRaw('LOWER(status) = ?', ['rusak'])->count(),
-            'total_maintenance' => MaintenanceRecord::count(),
-            'maintenance_this_month' => MaintenanceRecord::whereBetween('tanggal', [
-                now()->startOfMonth(),
-                now()->endOfMonth(),
-            ])->count(),
-            'pending_transfers' => Transfer::where('status', 'menunggu')->count(),
-            'prediction_count' => AiPrediction::count(),
-            'high_risk_count' => AiPrediction::whereIn('risk_category', ['Tinggi', 'high', 'High'])->count(),
+        $categories = Category::withCount('assets')->get();
+        $locations = Location::withCount('assets')->get();
+        $vendors = Vendor::withCount('assets')->get();
+
+        $chunks = [];
+
+        // Kategori
+        $catLines = ["A. Daftar Kategori Aset:"];
+        foreach ($categories as $cat) {
+            $catLines[] = sprintf("- %s (%d aset): %s", $cat->nama, $cat->assets_count, $cat->deskripsi ?: 'Tidak ada deskripsi');
+        }
+        $chunks[] = implode("\n", $catLines);
+
+        // Lokasi
+        $locLines = ["B. Daftar Lokasi Fisik:"];
+        foreach ($locations as $loc) {
+            $locDetails = [];
+            if ($loc->gedung) $locDetails[] = "Gedung: {$loc->gedung}";
+            if ($loc->lantai) $locDetails[] = "Lantai: {$loc->lantai}";
+            if ($loc->ruangan) $locDetails[] = "Ruang: {$loc->ruangan}";
+            $detailStr = !empty($locDetails) ? ' (' . implode(', ', $locDetails) . ')' : '';
+            $locLines[] = sprintf("- %s%s: Memuat %d aset. %s", $loc->nama, $detailStr, $loc->assets_count, $loc->deskripsi ?: '');
+        }
+        $chunks[] = implode("\n", $locLines);
+
+        // Vendor
+        $venLines = ["C. Daftar Rekanan / Vendor:"];
+        foreach ($vendors as $ven) {
+            $venLines[] = sprintf(
+                "- %s: Kontak %s | Email: %s | Alamat: %s (%d aset terhubung)",
+                $ven->nama,
+                $ven->kontak ?: '-',
+                $ven->email ?: '-',
+                $ven->alamat ?: '-',
+                $ven->assets_count
+            );
+        }
+        $chunks[] = implode("\n", $venLines);
+
+        return implode("\n\n", $chunks);
+    }
+
+    /**
+     * Menyusun data transaksi riil terkini (pemeliharaan, peminjaman, mutasi)
+     */
+    public function getRecentTransactionsText(): string
+    {
+        $chunks = [];
+
+        // Pemeliharaan terkini
+        $records = MaintenanceRecord::with('asset')->latest('tanggal')->take(5)->get();
+        if ($records->isNotEmpty()) {
+            $maintLines = ["A. Catatan Pemeliharaan & Servis Terkini:"];
+            foreach ($records as $m) {
+                $maintLines[] = sprintf(
+                    "- Aset: %s (%s) | Tanggal: %s | Jenis: %s | Status: %s | Keluhan: %s | Kerusakan: %s | Teknisi: %s | Biaya: Rp %s | Tindakan: %s",
+                    $m->asset->nama_asset ?? 'Aset #'.$m->asset_id,
+                    $m->asset->kode_asset ?? '-',
+                    $m->tanggal ? $m->tanggal->format('d/m/Y') : '-',
+                    $m->jenis,
+                    $m->status,
+                    $m->keluhan ?: '-',
+                    $m->kerusakan ?: '-',
+                    $m->teknisi ?: '-',
+                    number_format((float)$m->biaya, 0, ',', '.'),
+                    $m->hasil_tindakan ?: '-'
+                );
+            }
+            $chunks[] = implode("\n", $maintLines);
+        }
+
+        // Peminjaman terkini
+        $loans = AssetLoan::with(['asset', 'user'])->latest('tanggal_pinjam')->take(5)->get();
+        if ($loans->isNotEmpty()) {
+            $loanLines = ["B. Catatan Peminjaman Aset Terkini:"];
+            foreach ($loans as $l) {
+                $loanLines[] = sprintf(
+                    "- Peminjam: %s | Aset: %s (%s) | Tanggal Pinjam: %s | Rencana Kembali: %s | Kembali Aktual: %s | Status: %s | Keperluan: %s",
+                    $l->user->name ?? 'User #'.$l->user_id,
+                    $l->asset->nama_asset ?? 'Aset #'.$l->asset_id,
+                    $l->asset->kode_asset ?? '-',
+                    $l->tanggal_pinjam ? $l->tanggal_pinjam->format('d/m/Y') : '-',
+                    $l->tanggal_rencana_kembali ? $l->tanggal_rencana_kembali->format('d/m/Y') : '-',
+                    $l->tanggal_kembali ? $l->tanggal_kembali->format('d/m/Y') : '-',
+                    $l->status,
+                    $l->keperluan ?: '-'
+                );
+            }
+            $chunks[] = implode("\n", $loanLines);
+        }
+
+        // Mutasi terkini / pending
+        $transfers = Transfer::with(['asset', 'originLocation', 'targetLocation', 'requester'])
+            ->latest()
+            ->take(5)
+            ->get();
+        if ($transfers->isNotEmpty()) {
+            $transLines = ["C. Riwayat & Pengajuan Mutasi Lokasi:"];
+            foreach ($transfers as $t) {
+                $transLines[] = sprintf(
+                    "- Aset: %s (%s) | Dari: %s -> Ke: %s | Pemohon: %s | Status: %s | Alasan: %s",
+                    $t->asset->nama_asset ?? 'Aset #'.$t->asset_id,
+                    $t->asset->kode_asset ?? '-',
+                    $t->originLocation->nama ?? 'Awal',
+                    $t->targetLocation->nama ?? 'Tujuan',
+                    $t->requester->name ?? 'Staff',
+                    $t->status,
+                    $t->reason ?: '-'
+                );
+            }
+            $chunks[] = implode("\n", $transLines);
+        }
+
+        return !empty($chunks) ? implode("\n\n", $chunks) : "Belum ada transaksi operasional terkini.";
+    }
+
+    /**
+     * Melakukan pencarian dinamis di database berdasarkan kata kunci prompt pengguna
+     */
+    protected function searchDatabaseRelevantContext(string $userPrompt): string
+    {
+        $contextChunks = [];
+        $trimmed = trim($userPrompt);
+
+        // 1. Cek jika menyebut kode aset spesifik (misal AST-GIN-0001, AST-02, dll)
+        if (preg_match_all('/([A-Za-z0-9]+(?:-[A-Za-z0-9]+)+)/', $trimmed, $codeMatches)) {
+            $possibleCodes = array_unique($codeMatches[0]);
+            $matchedAssets = Asset::with(['category', 'location', 'vendor', 'maintenanceRecords', 'histories'])
+                ->whereIn('kode_asset', $possibleCodes)
+                ->get();
+
+            if ($matchedAssets->isNotEmpty()) {
+                $details = ["KONTEKS RINCI ASET BERDASARKAN KODE ASET YANG DISEBUT:"];
+                foreach ($matchedAssets as $a) {
+                    $details[] = $this->formatDetailedAssetCard($a);
+                }
+                $contextChunks[] = implode("\n\n", $details);
+            }
+        }
+
+        // 2. Cek jika menyebut nama barang tertentu (misal 'printer', 'proyektor', 'kursi', 'router', 'lemari')
+        $keywords = ['printer', 'proyektor', 'kursi', 'router', 'lemari', 'laptop', 'meja', 'komputer'];
+        $foundKeywords = [];
+        foreach ($keywords as $kw) {
+            if (stripos($trimmed, $kw) !== false) {
+                $foundKeywords[] = $kw;
+            }
+        }
+
+        if (!empty($foundKeywords)) {
+            $matchedByKeyword = Asset::with(['category', 'location', 'vendor', 'maintenanceRecords'])
+                ->where(function ($q) use ($foundKeywords) {
+                    foreach ($foundKeywords as $kw) {
+                        $lowerKw = '%' . strtolower($kw) . '%';
+                        $q->orWhereRaw('LOWER(nama_asset) LIKE ?', [$lowerKw])
+                          ->orWhereRaw('LOWER(merk) LIKE ?', [$lowerKw])
+                          ->orWhereRaw('LOWER(tipe) LIKE ?', [$lowerKw]);
+                    }
+                })
+                ->take(5)
+                ->get();
+
+            if ($matchedByKeyword->isNotEmpty()) {
+                $details = ["KONTEKS RINCI ASET YANG RELEVAN DENGAN KATA KUNCI PERTANYAAN:"];
+                foreach ($matchedByKeyword as $a) {
+                    $details[] = $this->formatDetailedAssetCard($a);
+                }
+                $contextChunks[] = implode("\n\n", $details);
+            }
+        }
+
+        return !empty($contextChunks) ? "==================================================\n6. DATA SPESIFIK RELEVAN DENGAN PERTANYAAN USER\n==================================================\n" . implode("\n\n", $contextChunks) : '';
+    }
+
+    /**
+     * Memformat rincian satu aset beserta riwayat maintenance & audit trail-nya
+     */
+    protected function formatDetailedAssetCard(Asset $asset): string
+    {
+        $price = 'Rp ' . number_format((float)$asset->harga, 0, ',', '.');
+        $card = [
+            "Aset: {$asset->nama_asset} (Kode: {$asset->kode_asset})",
+            "- Merk / Tipe: " . ($asset->merk ?: '-') . " / " . ($asset->tipe ?: '-'),
+            "- Kategori: " . ($asset->category->nama ?? '-'),
+            "- Lokasi Fisik: " . ($asset->location->nama ?? '-'),
+            "- Status: {$asset->status} | Kondisi: {$asset->kondisi}",
+            "- Tanggal Perolehan: " . ($asset->tanggal_perolehan ? $asset->tanggal_perolehan->format('d/m/Y') : '-'),
+            "- Harga Perolehan: {$price}",
+            "- Penanggung Jawab: " . ($asset->penanggung_jawab ?: '-'),
+            "- Vendor Rekanan: " . ($asset->vendor->nama ?? '-'),
+            "- Deskripsi: " . ($asset->deskripsi ?: '-'),
         ];
+
+        if ($asset->maintenanceRecords && $asset->maintenanceRecords->isNotEmpty()) {
+            $card[] = "- Riwayat Pemeliharaan/Perbaikan:";
+            foreach ($asset->maintenanceRecords as $m) {
+                $card[] = sprintf(
+                    "  * [%s] Status: %s, Keluhan: '%s', Tindakan: '%s', Teknisi: %s, Biaya: Rp %s",
+                    $m->tanggal ? $m->tanggal->format('d/m/Y') : '-',
+                    $m->status,
+                    $m->keluhan ?: '-',
+                    $m->hasil_tindakan ?: '-',
+                    $m->teknisi ?: '-',
+                    number_format((float)$m->biaya, 0, ',', '.')
+                );
+            }
+        }
+
+        if ($asset->histories && $asset->histories->isNotEmpty()) {
+            $card[] = "- Log Riwayat Audit Trail Terkini:";
+            foreach ($asset->histories->take(3) as $h) {
+                $card[] = sprintf("  * [%s] %s: %s", $h->tanggal ? $h->tanggal->format('d/m/Y H:i') : '-', $h->aktivitas, $h->deskripsi);
+            }
+        }
+
+        return implode("\n", $card);
     }
 }

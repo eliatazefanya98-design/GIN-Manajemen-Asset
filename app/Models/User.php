@@ -70,4 +70,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(AssetLoan::class);
     }
+
+    public function aiChatMessages(): HasMany
+    {
+        return $this->hasMany(AiChatMessage::class);
+    }
 }

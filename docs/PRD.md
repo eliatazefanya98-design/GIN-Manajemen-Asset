@@ -149,26 +149,24 @@ ANTIGRAVITY_MODEL=ag/gemini-3.8-flash-low
 ANTIGRAVITY_TIMEOUT=60
 ```
 
-### 5.3 Knowledge Base Chatbot: Dataset Mesin & Fitur Sistem Web
-Chatbot dilengkapi dengan 3 pilar knowledge komprehensif:
-1. **Knowledge Dataset Predictive Maintenance (`dataset.csv`)**:
-   - 10.000 rekaman operasional mesin pabrik (tipe L, M, H).
-   - Analisis & rumus fisika 5 modus kegagalan: Tool Wear Failure (TWF), Heat Dissipation Failure (HDF), Power Failure (PWF), Overstrain Failure (OSF), dan Random Failure (RNF).
-   - Dynamic Product ID lookup (misal: `L47230`, `M14860`, `H29424`) yang secara langsung membaca parameter telemetri riil dari file CSV.
-   - Evaluasi anomali sensor (RPM, torsi, temperatur, tool wear) berbasis formula daya mekanik dan batas regangan.
-2. **Knowledge Dummy Sistem & Fitur Website (SIM Aset)**:
-   - Panduan alur seluruh menu aplikasi: Master Data (Kategori, Lokasi, Vendor), Manajemen Aset, Peminjaman Aset (Loans), Mutasi Aset & Persetujuan Pimpinan (`/approvals`), Maintenance Records, Riwayat Aset, Laporan & Ekspor, serta Pengaturan Sistem.
+### 5.3 Knowledge Base Chatbot: Data Riil Sistem & Panduan Fitur Web
+Chatbot dilengkapi dengan 2 pilar knowledge komprehensif yang murni bersumber dari data dan alur sistem (tanpa dataset eksternal):
+1. **Live Database Context (Data Riil Sistem)**:
+   - Data inventaris aset aktual dari database (kode aset, nama aset, merk, tipe, kategori, lokasi fisik, vendor, status operasional, kondisi fisik, harga, dan penanggung jawab).
+   - Master data lengkap: Kategori (deskripsi & jumlah aset), Lokasi Fisik (gedung, lantai, ruangan), serta Vendor rekanan (kontak, email, alamat).
+   - Catatan transaksi & operasional terkini: riwayat pemeliharaan & perbaikan (keluhan, tindakan, teknisi, biaya), peminjaman aktif, mutasi lokasi aset & approval pimpinan, serta log audit trail riwayat aset.
+   - Dynamic search: mendeteksi kode aset atau kata kunci nama barang untuk mengambil konteks riil langsung dari query database.
+2. **Knowledge Panduan Sistem & SOP Aplikasi (SIM Aset)**:
+   - Panduan alur seluruh menu aplikasi: Master Data (Kategori, Lokasi, Vendor), Manajemen Aset, Peminjaman Aset (Loans), Mutasi Aset & Persetujuan Pimpinan (`/approvals`), Maintenance Records, Riwayat Aset, Laporan & Ekspor (PDF/Excel), serta Pengaturan Sistem.
    - Matriks peran pengguna: Admin, Staff, Pimpinan, dan Peminjam.
-   - Data dummy mesin pabrik yang dikorelasikan dengan inventaris aset di database.
-   - Standar Operasional Prosedur (SOP) penanganan mesin rusak, pengajuan mutasi lokasi, dan peminjaman.
-3. **Live Database Context**:
-   - Data ringkasan aktual dari PostgreSQL (total aset, status aktif/rusak/maintenance, tiket servis bulan berjalan, dan mutasi pending approval).
+   - Standar Operasional Prosedur (SOP) alur peminjaman & verifikasi kondisi aset saat pengembalian, alur mutasi lokasi aset, dan pencatatan tiket servis pemeliharaan.
 
 ### 5.4 Alur Kerja Chatbot (Context-Augmented Generation)
 1. **Penerimaan Prompt**: Pengguna memasukkan pertanyaan di halaman `/ai`.
 2. **Kompilasi Konteks Otomatis (`AiKnowledgeService`)**:
-   - Melakukan deteksi Product ID / tipe kegagalan pada prompt dan mencari baris terkait di `dataset.csv`.
-   - Mengambil ringkasan live dari PostgreSQL dan memadukannya dengan knowledge SOP/fitur web.
+   - Menghimpun statistik live database, tabel inventaris aset riil, data master, serta transaksi operasional terkini.
+   - Melakukan deteksi kode aset atau kata kunci barang pada prompt untuk mengambil data detail spesifik dari database.
+   - Memadukannya dengan SOP dan aturan ruang lingkup ketat (zero-tolerance out-of-scope).
 3. **Pengiriman Permintaan**:
    Laravel memanggil endpoint `POST http://localhost:20128/v1/chat/completions` membawa payload:
    ```json
@@ -176,10 +174,10 @@ Chatbot dilengkapi dengan 3 pilar knowledge komprehensif:
      "model": "ag/gemini-3.8-flash-low",
      "stream": false,
      "messages": [
-       { "role": "system", "content": "Knowledge base komprehensif (dataset + fitur web + live DB)" },
+       { "role": "system", "content": "Knowledge base komprehensif (data riil sistem + fitur web & SOP)" },
        { "role": "user", "content": "Pertanyaan pengguna" }
      ],
-     "temperature": 0.3,
+     "temperature": 0.1,
      "max_tokens": 2048
    }
    ```

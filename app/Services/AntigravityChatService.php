@@ -23,25 +23,42 @@ class AntigravityChatService
     }
 
     /**
-     * Mengirim prompt pengguna beserta seluruh Knowledge Base ke LLM Antigravity
+     * Mengirim prompt pengguna beserta seluruh Knowledge Base dan riwayat obrolan ke LLM Antigravity
      */
-    public function ask(string $userPrompt): string
+    public function ask(string $userPrompt, iterable $history = []): string
     {
         $systemPrompt = $this->knowledgeService->buildSystemPrompt($userPrompt);
+
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => $systemPrompt,
+            ],
+        ];
+
+        // Sisipkan riwayat percakapan sebelumnya jika ada
+        foreach ($history as $msg) {
+            $role = ($msg->role ?? ($msg['role'] ?? 'user')) === 'assistant' ? 'assistant' : 'user';
+            $content = trim($msg->message ?? ($msg['message'] ?? ($msg['content'] ?? '')));
+
+            if ($content !== '') {
+                $messages[] = [
+                    'role' => $role,
+                    'content' => $content,
+                ];
+            }
+        }
+
+        // Sisipkan prompt user terkini
+        $messages[] = [
+            'role' => 'user',
+            'content' => $userPrompt,
+        ];
 
         $payload = [
             'model' => $this->model,
             'stream' => false,
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => $systemPrompt,
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $userPrompt,
-                ],
-            ],
+            'messages' => $messages,
             'temperature' => 0.1,
             'max_tokens' => 2048,
         ];

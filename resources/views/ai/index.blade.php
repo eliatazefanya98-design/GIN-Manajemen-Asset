@@ -17,6 +17,13 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="row justify-content-center">
         <div class="col-12">
             <section class="ai-chat-panel">
@@ -26,12 +33,29 @@
                         <strong>GIN Assistant</strong>
                         <small>Didukung Knowledge Sistem SIM Aset & Data Inventaris Real-Time</small>
                     </div>
-                    <a href="{{ route('ai.index') }}" class="btn btn-light btn-sm ms-auto">
-                        <i class="bi bi-plus-lg me-1"></i> Chat baru
-                    </a>
+                    <div class="ms-auto d-flex align-items-center gap-2">
+                        @if(isset($messages) && $messages->count() > 0)
+                            <span class="badge bg-light text-secondary border px-2 py-1 d-none d-sm-inline-block" style="font-size: 11px;">
+                                <i class="bi bi-chat-dots me-1"></i> {{ $messages->count() }} pesan
+                            </span>
+                            <form action="{{ route('ai.clear') }}" method="POST" class="d-inline" onsubmit="return confirm('Mulai chat baru dan bersihkan riwayat obrolan ini?');">
+                                @csrf
+                                <button type="submit" class="btn btn-light btn-sm text-danger border" title="Hapus riwayat percakapan">
+                                    <i class="bi bi-trash3 me-1"></i> Hapus Riwayat
+                                </button>
+                            </form>
+                        @endif
+                        <form action="{{ route('ai.clear') }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-primary btn-sm" title="Mulai sesi obrolan baru">
+                                <i class="bi bi-plus-lg me-1"></i> Chat baru
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
-                <div class="ai-conversation">
+                <div class="ai-conversation" id="aiConversation">
+                    {{-- Pesan sambutan awal --}}
                     <div class="ai-message ai-message-bot">
                         <div class="ai-avatar ai-avatar-small"><i class="bi bi-stars"></i></div>
                         <div>
@@ -43,32 +67,50 @@
                                     <li><strong>Panduan alur kerja sistem</strong> (Master Data, Peminjaman Aset, Mutasi & Approval Pimpinan, serta Audit Trail Riwayat).</li>
                                     <li><strong>SOP pemeliharaan teknis</strong> dan informasi hak akses peran (Admin, Pimpinan, Staff, dan Peminjam).</li>
                                 </ul>
-                                <p class="mb-0">Silakan pilih topik pada <strong>Pilihan Cepat</strong> di bawah atau ajukan pertanyaan langsung melalui kolom chat!</p>
+                                <p class="mb-0">Riwayat percakapan Anda otomatis tersimpan. Silakan pilih topik pada <strong>Pilihan Cepat</strong> di bawah atau ajukan pertanyaan langsung melalui kolom chat!</p>
                             </div>
-                            <small class="ai-time">Baru saja</small>
+                            <small class="ai-time">Sistem</small>
                         </div>
                     </div>
 
-                    @isset($prompt)
-                        <div class="ai-message ai-message-user">
-                            <div>
-                                <div class="ai-bubble">{{ $prompt }}</div>
-                                <small class="ai-time">Anda · Baru saja</small>
-                            </div>
-                        </div>
+                    {{-- Loop riwayat percakapan tersimpan --}}
+                    @isset($messages)
+                        @foreach($messages as $msg)
+                            @if($msg->role === 'user')
+                                <div class="ai-message ai-message-user">
+                                    <div>
+                                        <div class="ai-bubble">{{ $msg->message }}</div>
+                                        <small class="ai-time">Anda · {{ $msg->created_at ? $msg->created_at->format('H:i') : 'Baru saja' }}</small>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="ai-message ai-message-bot">
+                                    <div class="ai-avatar ai-avatar-small"><i class="bi bi-stars"></i></div>
+                                    <div>
+                                        <div class="ai-bubble ai-response">
+                                            {!! \Illuminate\Support\Str::markdown($msg->message) !!}
+                                        </div>
+                                        <small class="ai-time">GIN Assistant · {{ $msg->created_at ? $msg->created_at->format('H:i') : 'Baru saja' }}</small>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
                     @endisset
 
-                    @isset($response)
-                        <div class="ai-message ai-message-bot">
-                            <div class="ai-avatar ai-avatar-small"><i class="bi bi-stars"></i></div>
-                            <div>
-                                <div class="ai-bubble ai-response">
-                                    {!! \Illuminate\Support\Str::markdown($response) !!}
+                    {{-- Indikator Mengetik (Typing Indicator) saat AJAX memproses --}}
+                    <div class="ai-message ai-message-bot" id="aiTypingIndicator" style="display: none;">
+                        <div class="ai-avatar ai-avatar-small"><i class="bi bi-stars"></i></div>
+                        <div>
+                            <div class="ai-bubble ai-typing-bubble d-flex align-items-center gap-2 py-2 px-3">
+                                <div class="ai-typing-dots">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
                                 </div>
-                                <small class="ai-time">GIN Assistant · Baru saja</small>
+                                <span class="text-muted" style="font-size: 12px;">GIN Assistant sedang menganalisis data sistem...</span>
                             </div>
                         </div>
-                    @endisset
+                    </div>
                 </div>
 
                 <form action="{{ route('ai.chat') }}" method="POST" class="ai-composer" id="aiChatForm">
@@ -154,10 +196,10 @@
     .ai-avatar { display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; color:#2f6fed; background:#eaf2ff; font-size:18px; }
     .ai-avatar-small { flex:0 0 30px; width:30px; height:30px; border-radius:8px; font-size:14px; }
     
-    .ai-conversation { min-height:420px; max-height:600px; overflow-y:auto; padding:25px 24px 15px; background:#fbfcfe; }
+    .ai-conversation { min-height:420px; max-height:600px; overflow-y:auto; padding:25px 24px 15px; background:#fbfcfe; scroll-behavior: smooth; }
     .ai-message { display:flex; gap:12px; margin-bottom:20px; }
     .ai-message-user { justify-content:flex-end; }
-    .ai-bubble { max-width:850px; padding:14px 18px; border-radius:4px 14px 14px 14px; color:#3b495d; background:#fff; border:1px solid #e7edf4; font-size:13px; line-height:1.7; white-space:normal; box-shadow:0 2px 6px rgba(0,0,0,.02); }
+    .ai-bubble { max-width:850px; padding:14px 18px; border-radius:4px 14px 14px 14px; color:#3b495d; background:#fff; border:1px solid #e7edf4; font-size:13px; line-height:1.7; white-space:normal; box-shadow:0 2px 6px rgba(0,0,0,.02); word-break: break-word; }
     .ai-message-user .ai-bubble { border:0; border-radius:14px 4px 14px 14px; color:#fff; background:#2f6fed; font-size:13px; box-shadow:0 3px 10px rgba(47,111,237,.25); }
     
     /* Markdown Typography Inside Chat Bubble */
@@ -176,12 +218,30 @@
     .ai-response table th { background: #f4f7fb; color: #334155; font-weight: 600; }
     .ai-response blockquote { border-left: 3px solid #2f6fed; padding-left: 12px; margin-left: 0; color: #556987; font-style: italic; }
 
+    /* Typing indicator */
+    .ai-typing-bubble { background: #f8fafc; border: 1px dashed #cbd5e1; }
+    .ai-typing-dots { display: inline-flex; align-items: center; gap: 4px; padding: 0 4px; }
+    .ai-typing-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #2f6fed;
+        display: inline-block;
+        animation: aiDotBounce 1.4s infinite ease-in-out both;
+    }
+    .ai-typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .ai-typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes aiDotBounce {
+        0%, 80%, 100% { transform: scale(0.2); opacity: 0.3; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+
     .ai-time { display:block; margin:6px 3px 0; color:#a0aaba; font-size:10px; }
     .ai-message-user .ai-time { text-align:right; }
     .ai-composer { padding:15px 20px 16px; border-top:1px solid #e8edf3; }
     .ai-composer textarea { display:block; width:100%; min-height:56px; resize:vertical; border:0; outline:0; color:#35445b; font:inherit; font-size:13px; }
     .ai-composer textarea::placeholder { color:#a3adbc; }
-    .ai-composer-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; color:#98a3b2; font-size:11px; margin-top:6px; }
+    .ai-composer-footer { display:flex; align-items:center; gap:12px; color:#98a3b2; font-size:11px; margin-top:6px; }
     .ai-composer-footer .btn { padding:8px 16px; border-radius:8px; font-weight:500; font-size:12px; }
     
     .ai-prompts { padding-top:22px; }
@@ -206,11 +266,35 @@
         const promptTextarea = document.getElementById('prompt');
         const chatForm = document.getElementById('aiChatForm');
         const submitBtn = document.getElementById('btnSubmitAi');
-        const conversation = document.querySelector('.ai-conversation');
+        const conversation = document.getElementById('aiConversation');
+        const typingIndicator = document.getElementById('aiTypingIndicator');
 
-        // Scroll riwayat obrolan ke bawah secara otomatis
-        if (conversation) {
-            conversation.scrollTop = conversation.scrollHeight;
+        // Fungsi scroll ke bawah secara otomatis
+        function scrollToBottom() {
+            if (conversation) {
+                conversation.scrollTop = conversation.scrollHeight;
+            }
+        }
+        scrollToBottom();
+
+        // Escape HTML untuk mencegah injeksi teks pengguna saat append DOM
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Format jam lokal HH:MM
+        function getCurrentTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            return hours + ':' + minutes;
         }
 
         // Klik kartu prompt cepat
@@ -223,30 +307,119 @@
             });
         });
 
-        // Tangani tombol Enter: Kirim pesan saat Enter, baris baru saat Shift + Enter
-        if (promptTextarea && chatForm) {
-            promptTextarea.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    if (e.isComposing) return; // Mencegah terkirim saat proses IME / autocomplete
+        // Tangani pengiriman formulir dengan AJAX / Fetch agar riwayat tidak kedip
+        if (chatForm && promptTextarea && submitBtn) {
+            chatForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
 
-                    e.preventDefault(); // Cegah pembuatan baris/paragraf baru
+                const promptText = promptTextarea.value.trim();
+                if (!promptText) return;
 
-                    const trimmed = promptTextarea.value.trim();
-                    if (trimmed.length > 0) {
-                        if (typeof chatForm.requestSubmit === 'function') {
-                            chatForm.requestSubmit();
-                        } else {
-                            chatForm.submit();
+                // 1. Tambahkan bubble chat pesan pengguna secara instan ke layar
+                const userBubbleHtml = `
+                    <div class="ai-message ai-message-user">
+                        <div>
+                            <div class="ai-bubble">${escapeHtml(promptText)}</div>
+                            <small class="ai-time">Anda · ${getCurrentTime()}</small>
+                        </div>
+                    </div>
+                `;
+                if (typingIndicator) {
+                    typingIndicator.insertAdjacentHTML('beforebegin', userBubbleHtml);
+                    typingIndicator.style.display = 'flex';
+                }
+                scrollToBottom();
+
+                // 2. Kosongkan textarea dan set tombol loading
+                promptTextarea.value = '';
+                submitBtn.disabled = true;
+                const originalBtnHtml = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menjawab...';
+
+                // 3. Kirim ke backend melalui Fetch API
+                const csrfToken = document.querySelector('input[name="_token"]')?.value || '';
+
+                try {
+                    const response = await fetch(chatForm.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ prompt: promptText })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.bot_message) {
+                            const botBubbleHtml = `
+                                <div class="ai-message ai-message-bot">
+                                    <div class="ai-avatar ai-avatar-small"><i class="bi bi-stars"></i></div>
+                                    <div>
+                                        <div class="ai-bubble ai-response">
+                                            ${data.bot_message.rendered}
+                                        </div>
+                                        <small class="ai-time">GIN Assistant · ${data.bot_message.time || getCurrentTime()}</small>
+                                    </div>
+                                </div>
+                            `;
+                            if (typingIndicator) {
+                                typingIndicator.insertAdjacentHTML('beforebegin', botBubbleHtml);
+                            }
+                        }
+                    } else {
+                        // Jika respon error dari server
+                        const errBubbleHtml = `
+                            <div class="ai-message ai-message-bot">
+                                <div class="ai-avatar ai-avatar-small text-danger"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                                <div>
+                                    <div class="ai-bubble text-danger" style="background:#fff5f5; border-color:#fed7d7;">
+                                        Maaf, terjadi kesalahan saat menghubungi layanan asisten AI. Silakan periksa koneksi atau coba sesaat lagi.
+                                    </div>
+                                    <small class="ai-time">Sistem · ${getCurrentTime()}</small>
+                                </div>
+                            </div>
+                        `;
+                        if (typingIndicator) {
+                            typingIndicator.insertAdjacentHTML('beforebegin', errBubbleHtml);
                         }
                     }
+                } catch (err) {
+                    console.error('AI chat fetch error:', err);
+                    const netErrHtml = `
+                        <div class="ai-message ai-message-bot">
+                            <div class="ai-avatar ai-avatar-small text-danger"><i class="bi bi-wifi-off"></i></div>
+                            <div>
+                                <div class="ai-bubble text-danger" style="background:#fff5f5; border-color:#fed7d7;">
+                                    Gagal terhubung ke server. Pastikan server aplikasi dan koneksi internet Anda aktif.
+                                </div>
+                                <small class="ai-time">Sistem · ${getCurrentTime()}</small>
+                            </div>
+                        </div>
+                    `;
+                    if (typingIndicator) {
+                        typingIndicator.insertAdjacentHTML('beforebegin', netErrHtml);
+                    }
+                } finally {
+                    if (typingIndicator) {
+                        typingIndicator.style.display = 'none';
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                    scrollToBottom();
+                    promptTextarea.focus();
                 }
             });
 
-            // Efek loading saat formulir dikirim
-            chatForm.addEventListener('submit', function () {
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Mengirim...';
+            // Kirim saat tekan Enter tanpa Shift
+            promptTextarea.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.isComposing) return;
+                    e.preventDefault();
+                    if (promptTextarea.value.trim().length > 0) {
+                        chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                    }
                 }
             });
         }
