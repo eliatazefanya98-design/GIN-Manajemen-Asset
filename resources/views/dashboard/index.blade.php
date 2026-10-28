@@ -40,7 +40,7 @@
 
         <div class="stat-card">
 
-            <div class="stat-icon blue">
+            <div class="stat-icon red">
                 <i class="bi bi-pc-display"></i>
             </div>
 
@@ -199,7 +199,7 @@
 
         <div class="stat-card">
 
-            <div class="stat-icon orange">
+            <div class="stat-icon purple">
                 <i class="bi bi-calendar-event"></i>
             </div>
 
@@ -227,7 +227,7 @@
 
         <div class="stat-card">
 
-            <div class="stat-icon orange">
+            <div class="stat-icon teal">
                 <i class="bi bi-arrow-repeat"></i>
             </div>
 
@@ -686,7 +686,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     data: @json($categoryData),
 
-                    backgroundColor: ['#2f6fed', '#18b88a', '#f2a52b', '#8064d9', '#f04b68'],
+                    backgroundColor: ['#881337', '#b91c1c', '#dc2626', '#f43f5e', '#fb7185', '#fda4af'],
 
                     borderWidth: 0
 
@@ -750,7 +750,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     data: @json($statusData),
 
-                    backgroundColor: ['#2f6fed', '#18b88a', '#f2a52b', '#f04b68', '#aeb8c7'],
+                    backgroundColor: ['#dc2626', '#fca5a5', '#f59e0b', '#b91c1c', '#94a3b8'],
 
                     borderRadius: 5,
 

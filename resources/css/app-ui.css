@@ -1,19 +1,54 @@
 :root {
-    --app-bg: #f5f7fb;
+    --app-bg: #f8fafc;
     --app-surface: #ffffff;
     --app-border: #edf0f5;
     --app-text: #1f2c45;
     --app-muted: #697586;
-    --app-blue: #2f6fed;
-    --app-blue-hover: #225ed4;
-    --app-blue-soft: #eaf2ff;
+
+    /* GIN Red Color Palette */
+    --gin-red: #c81e28;
+    --gin-red-hover: #a81620;
+    --gin-red-active: #90121a;
+    --gin-red-soft: #fdebed;
+    --gin-red-border: #fecaca;
+    --gin-red-shadow: rgba(200, 30, 40, 0.22);
+
+    /* Primary Theme Tokens */
+    --app-primary: #c81e28;
+    --app-primary-hover: #a81620;
+    --app-primary-soft: #fdebed;
+    --app-primary-border: #fecaca;
+
+    /* Legacy compatibility: maps --app-blue to red theme */
+    --app-blue: #c81e28;
+    --app-blue-hover: #a81620;
+    --app-blue-soft: #fdebed;
+
+    /* Semantic Accent Colors */
+    --app-accent-blue: #2563eb;
+    --app-accent-blue-soft: #eaf2ff;
     --app-green: #18b88a;
     --app-green-soft: #e4f8ed;
     --app-orange: #f2a52b;
     --app-orange-soft: #fff0df;
-    --app-red: #f04b68;
-    --app-red-soft: #ffe7e7;
+    --app-red: #c81e28;
+    --app-red-soft: #fdebed;
+    --app-purple: #9333ea;
+    --app-purple-soft: #f3e8ff;
+    --app-teal: #0d9488;
+    --app-teal-soft: #ccfbf1;
     --app-shadow: 0 2px 12px rgba(48, 67, 96, 0.04);
+
+    /* Bootstrap 5 Theme Variables */
+    --bs-primary: #c81e28;
+    --bs-primary-rgb: 200, 30, 40;
+    --bs-primary-bg-subtle: #fdebed;
+    --bs-primary-border-subtle: #fecaca;
+    --bs-primary-text-emphasis: #88131b;
+    --bs-link-color: #c81e28;
+    --bs-link-hover-color: #a81620;
+    --bs-link-color-rgb: 200, 30, 40;
+    --bs-focus-ring-color: rgba(200, 30, 40, 0.25);
 }
 
 * {
@@ -27,6 +62,33 @@ body {
     font-size: 13.5px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    position: relative;
+    min-height: 100vh;
+}
+
+/* Subtle decorative organic waves from the sample image */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 520px;
+    height: 320px;
+    background: radial-gradient(ellipse at 100% 0%, rgba(200, 30, 40, 0.09) 0%, rgba(244, 63, 94, 0.04) 45%, transparent 75%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 360px;
+    height: 240px;
+    background: radial-gradient(ellipse at 100% 100%, rgba(200, 30, 40, 0.06) 0%, rgba(244, 63, 94, 0.02) 50%, transparent 75%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 /* =========================================================
@@ -62,8 +124,8 @@ body {
     height: 38px;
     min-width: 38px;
     border-radius: 9px;
-    background: var(--app-blue-soft);
-    color: var(--app-blue);
+    background: var(--gin-red-soft);
+    color: var(--gin-red);
     font-size: 18px;
     display: flex;
     align-items: center;
@@ -131,22 +193,22 @@ body {
 }
 
 .menu-item:hover {
-    background: #f4f7fc;
-    color: var(--app-blue);
+    background: #fff2f4;
+    color: var(--gin-red);
 }
 
 .menu-item:hover i {
-    color: var(--app-blue);
+    color: var(--gin-red);
 }
 
 .menu-item.active {
-    background: var(--app-blue-soft);
-    color: var(--app-blue);
+    background: var(--gin-red-soft);
+    color: var(--gin-red);
     font-weight: 600;
 }
 
 .menu-item.active i {
-    color: var(--app-blue);
+    color: var(--gin-red);
 }
 
 /* =========================================================
@@ -175,7 +237,8 @@ body {
 }
 
 .sidebar-toggle:hover {
-    background: #f3f6fa;
+    background: #fff2f4;
+    color: var(--gin-red);
 }
 
 .navbar-right {
@@ -201,13 +264,15 @@ body {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #e8ddff;
-    color: #7b51d2;
-    font-size: 16px;
+    background: var(--gin-red);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    text-transform: uppercase;
 }
 
 .user-avatar img {
@@ -351,9 +416,15 @@ body {
     font-size: 22px;
 }
 
+.stat-icon.red,
+.stat-icon.primary {
+    background: var(--gin-red-soft);
+    color: var(--gin-red);
+}
+
 .stat-icon.blue {
-    background: var(--app-blue-soft);
-    color: var(--app-blue);
+    background: var(--app-accent-blue-soft);
+    color: var(--app-accent-blue);
 }
 
 .stat-icon.green {
@@ -366,9 +437,14 @@ body {
     color: var(--app-orange);
 }
 
-.stat-icon.red {
-    background: var(--app-red-soft);
-    color: var(--app-red);
+.stat-icon.purple {
+    background: var(--app-purple-soft);
+    color: var(--app-purple);
+}
+
+.stat-icon.teal {
+    background: var(--app-teal-soft);
+    color: var(--app-teal);
 }
 
 .stat-card span {
@@ -504,29 +580,33 @@ body {
 }
 
 .btn-primary {
-    background: var(--app-blue);
-    border-color: var(--app-blue);
-    color: #ffffff;
+    background: var(--gin-red) !important;
+    border-color: var(--gin-red) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px var(--gin-red-shadow);
 }
 
 .btn-primary:hover,
-.btn-primary:focus {
-    background: var(--app-blue-hover);
-    border-color: var(--app-blue-hover);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(47, 111, 237, 0.25);
+.btn-primary:focus,
+.btn-primary:active {
+    background: var(--gin-red-hover) !important;
+    border-color: var(--gin-red-hover) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(200, 30, 40, 0.35) !important;
 }
 
 .btn-outline-primary {
-    color: var(--app-blue);
-    border-color: #cbdcff;
-    background: transparent;
+    color: var(--gin-red) !important;
+    border-color: var(--gin-red-border) !important;
+    background: transparent !important;
 }
 
-.btn-outline-primary:hover {
-    background: var(--app-blue);
-    border-color: var(--app-blue);
-    color: #ffffff;
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background: var(--gin-red) !important;
+    border-color: var(--gin-red) !important;
+    color: #ffffff !important;
 }
 
 .btn-secondary,
@@ -629,8 +709,31 @@ body {
 .badge.bg-info,
 .badge-status.borrowed,
 .text-bg-info {
-    background: var(--app-blue-soft) !important;
-    color: #2563eb !important;
+    background: #e0f2fe !important;
+    color: #0284c7 !important;
+}
+
+.badge.bg-primary,
+.badge-status.primary {
+    background: var(--gin-red-soft) !important;
+    color: var(--gin-red) !important;
+}
+
+.text-primary {
+    color: var(--gin-red) !important;
+}
+
+.bg-primary {
+    background-color: var(--gin-red) !important;
+}
+
+.bg-primary-subtle {
+    background-color: var(--gin-red-soft) !important;
+    color: var(--gin-red) !important;
+}
+
+.border-primary {
+    border-color: var(--gin-red) !important;
 }
 
 .badge.bg-secondary,
@@ -639,6 +742,20 @@ body {
 .text-bg-secondary {
     background: #f1f3f7 !important;
     color: #64748b !important;
+}
+
+/* Card action links */
+.card-header-custom a,
+.card-header a {
+    color: var(--gin-red);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.card-header-custom a:hover,
+.card-header a:hover {
+    color: var(--gin-red-hover);
 }
 
 /* =========================================================
@@ -668,10 +785,20 @@ label {
 
 .form-control:focus,
 .form-select:focus {
-    border-color: var(--app-blue);
-    box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.12);
+    border-color: var(--gin-red) !important;
+    box-shadow: 0 0 0 3px rgba(200, 30, 40, 0.12) !important;
     background: #ffffff;
     outline: none;
+}
+
+.form-check-input:checked {
+    background-color: var(--gin-red) !important;
+    border-color: var(--gin-red) !important;
+}
+
+.form-check-input:focus {
+    border-color: var(--gin-red) !important;
+    box-shadow: 0 0 0 3px rgba(200, 30, 40, 0.15) !important;
 }
 
 .input-group-text {
@@ -741,16 +868,16 @@ label {
 .pagination .page-link {
     border: 1px solid var(--app-border);
     border-radius: 6px !important;
-    color: var(--app-blue);
+    color: var(--gin-red);
     font-size: 12px;
     font-weight: 500;
     padding: 6px 12px;
 }
 
 .pagination .active .page-link {
-    background: var(--app-blue);
-    border-color: var(--app-blue);
-    color: #ffffff;
+    background: var(--gin-red) !important;
+    border-color: var(--gin-red) !important;
+    color: #ffffff !important;
 }
 
 .pagination .disabled .page-link {
@@ -840,7 +967,7 @@ label {
 .schedule strong {
     display: block;
     font-size: 12px;
-    color: var(--app-blue);
+    color: var(--gin-red);
 }
 
 .schedule small {

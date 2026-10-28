@@ -102,7 +102,7 @@
                     {{-- PANEL 1: EDIT PROFIL --}}
                     <div class="profile-form-panel" id="profile-edit-panel" {{ $hasPasswordErrors ? 'hidden' : '' }}>
                         <div class="alert alert-light border d-flex align-items-center gap-3 mb-4 p-3 rounded">
-                            <div class="stat-icon" style="width: 42px; height: 42px; background: rgba(37,99,235,0.1); color: var(--app-blue);">
+                            <div class="stat-icon" style="width: 42px; height: 42px; background: rgba(200,30,40,0.1); color: var(--app-blue);">
                                 <i class="bi bi-person-check fs-5"></i>
                             </div>
                             <div>
@@ -151,7 +151,7 @@
                     {{-- PANEL 2: PASSWORD --}}
                     <div class="profile-form-panel" id="password-panel" {{ !$hasPasswordErrors ? 'hidden' : '' }}>
                         <div class="alert alert-light border d-flex align-items-center gap-3 mb-4 p-3 rounded">
-                            <div class="stat-icon" style="width: 42px; height: 42px; background: rgba(37,99,235,0.1); color: var(--app-blue);">
+                            <div class="stat-icon" style="width: 42px; height: 42px; background: rgba(200,30,40,0.1); color: var(--app-blue);">
                                 <i class="bi bi-shield-lock fs-5"></i>
                             </div>
                             <div>
@@ -220,7 +220,7 @@
         width: 104px;
         height: 104px;
         border-radius: 50%;
-        background: linear-gradient(135deg, rgba(37,99,235,0.15), rgba(37,99,235,0.05));
+        background: linear-gradient(135deg, rgba(200,30,40,0.15), rgba(200,30,40,0.05));
         border: 3px solid #ffffff;
         box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         display: flex;

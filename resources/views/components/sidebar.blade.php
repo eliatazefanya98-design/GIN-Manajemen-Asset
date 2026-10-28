@@ -218,9 +218,11 @@
 
     height: 100vh;
 
-    background: #06264a;
+    background: #ffffff;
 
-    color: white;
+    color: #63708a;
+
+    border-right: 1px solid var(--app-border, #edf0f5);
 
     overflow-y: auto;
 
@@ -243,7 +245,7 @@
 
     padding: 22px 20px;
 
-    border-bottom: 1px solid rgba(255,255,255,.08);
+    border-bottom: 1px solid var(--app-border, #edf0f5);
 
 }
 
@@ -260,7 +262,8 @@
 
     border-radius: 10px;
 
-    background: #0d6efd;
+    background: var(--gin-red-soft, #fdebed);
+    color: var(--gin-red, #c81e28);
 
     font-size: 21px;
 
@@ -275,6 +278,8 @@
 
     font-weight: 700;
 
+    color: #1f2c45;
+
 }
 
 
@@ -286,7 +291,7 @@
 
     font-size: 8px;
 
-    color: #aab9ce;
+    color: #8a96a8;
 
 }
 
@@ -310,7 +315,7 @@
 
     font-weight: 600;
 
-    color: #9cafc6;
+    color: #9aa8bb;
 
 }
 
@@ -327,7 +332,7 @@
 
     margin-bottom: 3px;
 
-    color: #dbe5f2;
+    color: #627189;
 
     text-decoration: none;
 
@@ -351,9 +356,9 @@
 
 .menu-item:hover {
 
-    background: rgba(255,255,255,.08);
+    background: #fff2f4;
 
-    color: white;
+    color: var(--gin-red, #c81e28);
 
 }
 
@@ -364,11 +369,12 @@
 
 .menu-item.active {
 
-    background: #0879f9;
+    background: var(--gin-red-soft, #fdebed);
 
-    color: white;
+    color: var(--gin-red, #c81e28);
 
-    box-shadow: 0 5px 15px rgba(0,0,0,.15);
+    box-shadow: none;
+    font-weight: 600;
 
 }
 

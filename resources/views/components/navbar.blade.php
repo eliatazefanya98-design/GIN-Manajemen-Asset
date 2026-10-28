@@ -189,9 +189,9 @@
 
 .notification-button:hover,
 .notification-button[aria-expanded="true"] {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    color: #0d6efd;
+    background: #fff2f4;
+    border-color: #fecaca;
+    color: var(--gin-red, #c81e28);
 }
 
 .notification-button .notification-badge {
@@ -201,7 +201,7 @@
     min-width: 18px;
     height: 18px;
     padding: 0 4px;
-    background: #dc3545;
+    background: var(--gin-red, #c81e28);
     color: white;
     border-radius: 9px;
     font-size: 9px;
@@ -348,7 +348,7 @@
 .notification-footer-link {
     font-size: 12px;
     font-weight: 600;
-    color: #0d6efd;
+    color: var(--gin-red, #c81e28);
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -357,7 +357,7 @@
 }
 
 .notification-footer-link:hover {
-    color: #0a58ca;
+    color: var(--gin-red-hover, #a81620);
     text-decoration: underline;
 }
 

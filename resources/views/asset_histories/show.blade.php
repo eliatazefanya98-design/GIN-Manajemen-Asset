@@ -126,7 +126,7 @@
                 <div class="card-body">
                     @if($history->user)
                         <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon" style="background: rgba(37,99,235,0.1); color: var(--app-blue); width: 44px; height: 44px;">
+                            <div class="stat-icon" style="background: rgba(200,30,40,0.1); color: var(--app-blue); width: 44px; height: 44px;">
                                 <i class="bi bi-person-circle fs-4"></i>
                             </div>
                             <div>

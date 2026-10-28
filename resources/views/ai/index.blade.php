@@ -185,7 +185,7 @@
     .ai-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:20px; }
     .ai-heading h2 { margin:4px 0 5px; font-size:24px; letter-spacing:-.03em; }
     .ai-eyebrow, .ai-section-label { color:#66758d; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
-    .ai-eyebrow { color:#2f6fed; }
+    .ai-eyebrow { color:#c81e28; }
     .ai-status { padding:7px 12px; border:1px solid #d9e8e1; border-radius:20px; background:#f3fbf7; color:#27805f; font-size:11px; white-space:nowrap; }
     .ai-status span { display:inline-block; width:7px; height:7px; margin-right:6px; border-radius:50%; background:#18b88a; vertical-align:1px; }
     
@@ -193,14 +193,14 @@
     .ai-chat-topline { display:flex; align-items:center; gap:12px; padding:16px 22px; border-bottom:1px solid #edf1f5; }
     .ai-chat-topline strong { display:block; color:#25344d; font-size:14px; }
     .ai-chat-topline small { display:block; color:#8995a7; font-size:11px; margin-top:2px; }
-    .ai-avatar { display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; color:#2f6fed; background:#eaf2ff; font-size:18px; }
+    .ai-avatar { display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; color:#c81e28; background:#fdebed; font-size:18px; }
     .ai-avatar-small { flex:0 0 30px; width:30px; height:30px; border-radius:8px; font-size:14px; }
     
     .ai-conversation { min-height:420px; max-height:600px; overflow-y:auto; padding:25px 24px 15px; background:#fbfcfe; scroll-behavior: smooth; }
     .ai-message { display:flex; gap:12px; margin-bottom:20px; }
     .ai-message-user { justify-content:flex-end; }
     .ai-bubble { max-width:850px; padding:14px 18px; border-radius:4px 14px 14px 14px; color:#3b495d; background:#fff; border:1px solid #e7edf4; font-size:13px; line-height:1.7; white-space:normal; box-shadow:0 2px 6px rgba(0,0,0,.02); word-break: break-word; }
-    .ai-message-user .ai-bubble { border:0; border-radius:14px 4px 14px 14px; color:#fff; background:#2f6fed; font-size:13px; box-shadow:0 3px 10px rgba(47,111,237,.25); }
+    .ai-message-user .ai-bubble { border:0; border-radius:14px 4px 14px 14px; color:#fff; background:#c81e28; font-size:13px; box-shadow:0 3px 10px rgba(200,30,40,.25); }
     
     /* Markdown Typography Inside Chat Bubble */
     .ai-response { color: #2d3b4f; }
@@ -216,7 +216,7 @@
     .ai-response table { width: 100%; border-collapse: collapse; margin-bottom: 0.85rem; font-size: 12px; }
     .ai-response table th, .ai-response table td { border: 1px solid #e1e7f0; padding: 8px 12px; text-align: left; }
     .ai-response table th { background: #f4f7fb; color: #334155; font-weight: 600; }
-    .ai-response blockquote { border-left: 3px solid #2f6fed; padding-left: 12px; margin-left: 0; color: #556987; font-style: italic; }
+    .ai-response blockquote { border-left: 3px solid #c81e28; padding-left: 12px; margin-left: 0; color: #556987; font-style: italic; }
 
     /* Typing indicator */
     .ai-typing-bubble { background: #f8fafc; border: 1px dashed #cbd5e1; }
@@ -225,7 +225,7 @@
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background-color: #2f6fed;
+        background-color: #c81e28;
         display: inline-block;
         animation: aiDotBounce 1.4s infinite ease-in-out both;
     }
@@ -246,8 +246,8 @@
     
     .ai-prompts { padding-top:22px; }
     .ai-prompt-card { display:flex; align-items:center; gap:10px; width:100%; min-height:60px; padding:12px 14px; text-align:left; border:1px solid #e3e9f1; border-radius:10px; background:#fff; color:#526176; font-size:11.5px; transition:.15s ease; cursor:pointer; }
-    .ai-prompt-card:hover { border-color:#a8c4f7; color:#2f6fed; background:#f8fbff; transform: translateY(-1px); box-shadow:0 4px 12px rgba(47,111,237,.08); }
-    .ai-prompt-card > i:first-child { color:#2f6fed; font-size:18px; flex-shrink:0; }
+    .ai-prompt-card:hover { border-color:#fecaca; color:#c81e28; background:#fdf2f4; transform: translateY(-1px); box-shadow:0 4px 12px rgba(200,30,40,.08); }
+    .ai-prompt-card > i:first-child { color:#c81e28; font-size:18px; flex-shrink:0; }
     .ai-prompt-card span { flex:1; line-height: 1.35; font-weight: 500; }
     .ai-prompt-card > i:last-child { color:#a3afbf; font-size:13px; flex-shrink:0; }
 

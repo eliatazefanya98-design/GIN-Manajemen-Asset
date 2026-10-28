@@ -5,7 +5,7 @@ html[data-theme="dark"] {
     --app-border: #343d4b;
     --app-text: #e4e9f0;
     --app-muted: #a1adbd;
-    --app-blue-soft: #263b59;
+    --app-blue-soft: #382631;
     --bs-body-bg: #151a22;
     --bs-body-color: #e4e9f0;
     --bs-border-color: #343d4b;
@@ -155,16 +155,41 @@ body[data-theme="dark"] .text-muted {
     color: #a1adbd !important;
 }
 
+body[data-theme="dark"] .text-primary {
+    color: #f0788c !important;
+}
+
+body[data-theme="dark"] .btn-primary {
+    background: #c81e28 !important;
+    border-color: #c81e28 !important;
+}
+
+body[data-theme="dark"] .btn-primary:hover,
+body[data-theme="dark"] .btn-primary:focus {
+    background: #a81620 !important;
+    border-color: #a81620 !important;
+}
+
+body[data-theme="dark"] .btn-outline-primary {
+    color: #f0788c !important;
+    border-color: #7a3140 !important;
+}
+
+body[data-theme="dark"] .card-header-custom a,
+body[data-theme="dark"] .card-header a {
+    color: #f0788c !important;
+}
+
 body[data-theme="dark"] .pagination .page-link {
-    color: #c4d5f3;
+    color: #f0788c;
     background: #252e3b;
     border-color: #414c5c;
 }
 
 body[data-theme="dark"] .pagination .active .page-link {
     color: #fff;
-    background: var(--app-blue);
-    border-color: var(--app-blue);
+    background: #c81e28;
+    border-color: #c81e28;
 }
 
 .theme-toggle {
