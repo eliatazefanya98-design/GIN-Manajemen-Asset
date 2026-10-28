@@ -400,3 +400,43 @@ body[data-theme="dark"] .theme-option:not(:has(input:checked)):hover {
         max-width: 100%;
     }
 }
+
+body[data-theme="dark"] .sidebar-backdrop {
+    background: rgba(0, 0, 0, 0.65);
+}
+
+body[data-theme="dark"] .sidebar-close-btn {
+    color: #9aa7b8;
+}
+
+body[data-theme="dark"] .sidebar-close-btn:hover {
+    background: #382631;
+    color: #f0788c;
+}
+
+body[data-theme="dark"] .menu-group-header {
+    color: #8b99ac;
+}
+
+body[data-theme="dark"] .menu-group-header:hover {
+    color: #f0788c;
+    background: rgba(240, 120, 140, 0.08);
+}
+
+body[data-theme="dark"] .menu-group.open .menu-group-header {
+    color: #cbd5e1;
+}
+
+body[data-theme="dark"] .menu-group.open .menu-group-header .group-chevron {
+    color: #f0788c;
+}
+
+body[data-theme="dark"] .submenu-item {
+    color: #b3bdca;
+}
+
+body[data-theme="dark"] .submenu-item:hover,
+body[data-theme="dark"] .submenu-item.active {
+    color: #f0788c;
+    background: #382631;
+}

@@ -19,183 +19,185 @@
             @endif
         </div>
 
-        <div>
+        <div class="brand-info">
             <h5>{{ $systemInitials }}</h5>
             <span>{{ $systemSetting->organization_name }}</span>
         </div>
+
+        <button type="button" class="sidebar-close-btn d-lg-none" id="sidebar-close-btn" aria-label="Tutup menu sidebar">
+            <i class="bi bi-x-lg"></i>
+        </button>
     </div>
 
     <div class="sidebar-menu">
+        {{-- ==========================================
+            OVERVIEW
+        ========================================== --}}
         @if(auth()->user()->isLeader() || auth()->user()->isAdmin())
+            <div class="menu-section-label">OVERVIEW</div>
             <a href="{{ route('dashboard') }}" class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i class="bi bi-house-fill"></i>
+                <i class="bi bi-grid-fill"></i>
                 <span>Dashboard</span>
             </a>
         @endif
 
         {{-- ==========================================
-            MASTER DATA
+            MASTER DATA (COLLAPSIBLE SUBMENU)
         ========================================== --}}
         @if(auth()->user()->isAdmin())
-            <div class="menu-title">MASTER DATA</div>
+            @php
+                $isMasterDataActive = request()->routeIs('categories.*', 'locations.*', 'vendors.*');
+                $isMasterDataOpen = $isMasterDataActive || !request()->routeIs('ai.*', 'settings.*', 'users.*');
+            @endphp
+            <div class="menu-group {{ $isMasterDataOpen ? 'open' : '' }}" id="group-master-data">
+                <button type="button" class="menu-group-header" aria-expanded="{{ $isMasterDataOpen ? 'true' : 'false' }}">
+                    <span class="group-title">MASTER DATA</span>
+                    <i class="bi bi-chevron-down group-chevron"></i>
+                </button>
+                <div class="submenu-list">
+                    {{-- KATEGORI --}}
+                    <a href="{{ route('categories.index') }}"
+                       class="menu-item submenu-item {{ request()->routeIs('categories.*') ? 'active' : '' }}">
+                        <i class="bi bi-tags-fill"></i>
+                        <span>Kategori</span>
+                    </a>
 
+                    {{-- LOKASI --}}
+                    <a href="{{ route('locations.index') }}"
+                       class="menu-item submenu-item {{ request()->routeIs('locations.*') ? 'active' : '' }}">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span>Lokasi</span>
+                    </a>
 
-        {{-- KATEGORI --}}
-        <a href="{{ route('categories.index') }}"
-           class="menu-item {{ request()->routeIs('categories.*') ? 'active' : '' }}">
-
-            <i class="bi bi-tags-fill"></i>
-
-            <span>Kategori</span>
-
-        </a>
-
-
-        {{-- LOKASI --}}
-        <a href="{{ route('locations.index') }}"
-           class="menu-item {{ request()->routeIs('locations.*') ? 'active' : '' }}">
-
-            <i class="bi bi-geo-alt-fill"></i>
-
-            <span>Lokasi</span>
-
-        </a>
-
-
-        {{-- VENDOR --}}
-        <a href="{{ route('vendors.index') }}"
-           class="menu-item {{ request()->routeIs('vendors.*') ? 'active' : '' }}">
-
-            <i class="bi bi-building"></i>
-
-            <span>Vendor</span>
-
-        </a>
+                    {{-- VENDOR --}}
+                    <a href="{{ route('vendors.index') }}"
+                       class="menu-item submenu-item {{ request()->routeIs('vendors.*') ? 'active' : '' }}">
+                        <i class="bi bi-building"></i>
+                        <span>Vendor</span>
+                    </a>
+                </div>
+            </div>
         @endif
 
-
         {{-- ==========================================
-            MANAJEMEN ASSET
+            MANAJEMEN ASSET (COLLAPSIBLE SUBMENU)
         ========================================== --}}
         @if(in_array(auth()->user()->role, ['admin', 'staff', 'pimpinan', 'peminjam'], true))
-            <div class="menu-title">MANAJEMEN ASSET</div>
+            @php
+                $isAssetMgmtActive = request()->routeIs('loans.*', 'assets.*', 'transfers.*', 'maintenance-records.*', 'approvals.*', 'reports.*', 'asset-histories.*');
+                $isAssetMgmtOpen = $isAssetMgmtActive || !request()->routeIs('ai.*', 'settings.*', 'users.*');
+            @endphp
+            <div class="menu-group {{ $isAssetMgmtOpen ? 'open' : '' }}" id="group-manajemen-asset">
+                <button type="button" class="menu-group-header" aria-expanded="{{ $isAssetMgmtOpen ? 'true' : 'false' }}">
+                    <span class="group-title">MANAJEMEN ASSET</span>
+                    <i class="bi bi-chevron-down group-chevron"></i>
+                </button>
+                <div class="submenu-list">
+                    @if(auth()->user()->role === 'peminjam')
+                        <a href="{{ route('loans.index') }}" class="menu-item submenu-item {{ request()->routeIs('loans.index', 'loans.create', 'loans.return') ? 'active' : '' }}">
+                            <i class="bi bi-box-arrow-in-down"></i>
+                            <span>Peminjaman</span>
+                        </a>
+                        <a href="{{ route('loans.history') }}" class="menu-item submenu-item {{ request()->routeIs('loans.history') ? 'active' : '' }}">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Riwayat Peminjaman</span>
+                        </a>
+                    @else
+                        <a href="{{ route('assets.index') }}" class="menu-item submenu-item {{ request()->routeIs('assets.*') ? 'active' : '' }}">
+                            <i class="bi bi-pc-display"></i>
+                            <span>Data Asset</span>
+                        </a>
 
+                        @if(in_array(auth()->user()->role, ['admin', 'staff'], true))
+                            <a href="{{ route('transfers.index') }}" class="menu-item submenu-item {{ request()->routeIs('transfers.*') ? 'active' : '' }}">
+                                <i class="bi bi-arrow-left-right"></i>
+                                <span>Transfer</span>
+                            </a>
+                            <a href="{{ route('loans.index') }}" class="menu-item submenu-item {{ request()->routeIs('loans.index', 'loans.history') ? 'active' : '' }}">
+                                <i class="bi bi-box-seam"></i>
+                                <span>Data Peminjaman</span>
+                            </a>
+                        @endif
 
-        @if(auth()->user()->role === 'peminjam')
-            <a href="{{ route('loans.index') }}" class="menu-item {{ request()->routeIs('loans.index', 'loans.create', 'loans.return') ? 'active' : '' }}">
-                <i class="bi bi-box-arrow-in-down"></i>
-                <span>Peminjaman</span>
-            </a>
-            <a href="{{ route('loans.history') }}" class="menu-item {{ request()->routeIs('loans.history') ? 'active' : '' }}">
-                <i class="bi bi-clock-history"></i>
-                <span>Riwayat Peminjaman</span>
-            </a>
-        @else
-            <a href="{{ route('assets.index') }}" class="menu-item {{ request()->routeIs('assets.*') ? 'active' : '' }}">
-                <i class="bi bi-pc-display"></i>
-                <span>Data Asset</span>
-            </a>
+                        @if(in_array(auth()->user()->role, ['admin', 'staff', 'pimpinan'], true))
+                            <a href="{{ route('maintenance-records.index') }}"
+                               class="menu-item submenu-item {{ request()->routeIs('maintenance-records.*') ? 'active' : '' }}">
+                                <i class="bi bi-tools"></i>
+                                <span>Maintenance</span>
+                            </a>
+                        @endif
 
-            @if(in_array(auth()->user()->role, ['admin', 'staff'], true))
-                <a href="{{ route('transfers.index') }}" class="menu-item {{ request()->routeIs('transfers.*') ? 'active' : '' }}">
-                    <i class="bi bi-arrow-left-right"></i>
-                    <span>Transfer</span>
-                </a>
-                <a href="{{ route('loans.index') }}" class="menu-item {{ request()->routeIs('loans.index', 'loans.history') ? 'active' : '' }}">
-                    <i class="bi bi-box-seam"></i>
-                    <span>Data Peminjaman</span>
-                </a>
-            @endif
+                        @if(in_array(auth()->user()->role, ['admin', 'pimpinan'], true))
+                            <a href="{{ route('approvals.index') }}" class="menu-item submenu-item {{ request()->routeIs('approvals.*') ? 'active' : '' }}">
+                                <i class="bi bi-check2-square"></i>
+                                <span>Approval</span>
+                            </a>
+                            <a href="{{ route('reports.index') }}" class="menu-item submenu-item {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                                <i class="bi bi-file-earmark-bar-graph"></i>
+                                <span>Laporan</span>
+                            </a>
+                        @endif
+
+                        @if(in_array(auth()->user()->role, ['admin', 'staff', 'pimpinan'], true))
+                            <a href="{{ route('asset-histories.index') }}"
+                               class="menu-item submenu-item {{ request()->routeIs('asset-histories.*') ? 'active' : '' }}">
+                                <i class="bi bi-clock-history"></i>
+                                <span>Asset History</span>
+                            </a>
+                        @endif
+                    @endif
+                </div>
+            </div>
         @endif
-        @endif
-
-
-        {{-- MAINTENANCE --}}
-        @if(in_array(auth()->user()->role, ['admin', 'staff', 'pimpinan'], true))
-        <a href="{{ route('maintenance-records.index') }}"
-           class="menu-item {{ request()->routeIs('maintenance-records.*') ? 'active' : '' }}">
-
-            <i class="bi bi-tools"></i>
-
-            <span>Maintenance</span>
-
-        </a>
-        @endif
-
-        @if(in_array(auth()->user()->role, ['admin', 'pimpinan'], true))
-            <a href="{{ route('approvals.index') }}" class="menu-item {{ request()->routeIs('approvals.*') ? 'active' : '' }}">
-                <i class="bi bi-check2-square"></i>
-                <span>Approval</span>
-            </a>
-            <a href="{{ route('reports.index') }}" class="menu-item {{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                <i class="bi bi-file-earmark-bar-graph"></i>
-                <span>Laporan</span>
-            </a>
-        @endif
-
-
-        {{-- ASSET HISTORY --}}
-        @if(in_array(auth()->user()->role, ['admin', 'staff', 'pimpinan'], true))
-        <a href="{{ route('asset-histories.index') }}"
-           class="menu-item {{ request()->routeIs('asset-histories.*') ? 'active' : '' }}">
-
-            <i class="bi bi-clock-history"></i>
-
-            <span>Asset History</span>
-
-        </a>
-        @endif
-
 
         {{-- ==========================================
-            AI & PREDIKSI
+            AI & PREDIKSI (COLLAPSIBLE SUBMENU)
         ========================================== --}}
-        <div class="menu-title">
-            AI & PREDIKSI
-        </div>
-
-
-          {{-- AI ASSISTANT --}}
-          @if(in_array(auth()->user()->role, ['admin', 'staff', 'pimpinan'], true))
-          <a href="{{ route('ai.index') }}"
-              class="menu-item {{ request()->routeIs('ai.*') ? 'active' : '' }}">
-
-            <i class="bi bi-robot"></i>
-
-            <span>AI Assistant</span>
-
-        </a>
+        @if(in_array(auth()->user()->role, ['admin', 'staff', 'pimpinan'], true))
+            @php
+                $isAiActive = request()->routeIs('ai.*');
+            @endphp
+            <div class="menu-group {{ $isAiActive ? 'open' : '' }}" id="group-ai">
+                <button type="button" class="menu-group-header" aria-expanded="{{ $isAiActive ? 'true' : 'false' }}">
+                    <span class="group-title">AI & PREDIKSI</span>
+                    <i class="bi bi-chevron-down group-chevron"></i>
+                </button>
+                <div class="submenu-list">
+                    <a href="{{ route('ai.index') }}"
+                       class="menu-item submenu-item {{ request()->routeIs('ai.*') ? 'active' : '' }}">
+                        <i class="bi bi-robot"></i>
+                        <span>AI Assistant</span>
+                    </a>
+                </div>
+            </div>
         @endif
-
 
         {{-- ==========================================
-            PENGATURAN
+            PENGATURAN (COLLAPSIBLE SUBMENU)
         ========================================== --}}
-        <div class="menu-title">
-            PENGATURAN
-        </div>
-
-
         @if(auth()->user()->isAdmin())
-        <a href="{{ route('settings.index') }}"
-              class="menu-item {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-
-            <i class="bi bi-gear"></i>
-
-            <span>Pengaturan Sistem</span>
-
-        </a>
-
-        @if(auth()->user()->isAdmin())
-            <a href="{{ route('users.index') }}"
-               class="menu-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
-                <i class="bi bi-people"></i>
-                <span>Manajemen Role</span>
-            </a>
+            @php
+                $isSettingsActive = request()->routeIs('settings.*', 'users.*');
+            @endphp
+            <div class="menu-group {{ $isSettingsActive ? 'open' : '' }}" id="group-pengaturan">
+                <button type="button" class="menu-group-header" aria-expanded="{{ $isSettingsActive ? 'true' : 'false' }}">
+                    <span class="group-title">PENGATURAN</span>
+                    <i class="bi bi-chevron-down group-chevron"></i>
+                </button>
+                <div class="submenu-list">
+                    <a href="{{ route('settings.index') }}"
+                       class="menu-item submenu-item {{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                        <i class="bi bi-gear"></i>
+                        <span>Pengaturan Sistem</span>
+                    </a>
+                    <a href="{{ route('users.index') }}"
+                       class="menu-item submenu-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                        <i class="bi bi-people"></i>
+                        <span>Manajemen Role</span>
+                    </a>
+                </div>
+            </div>
         @endif
-        @endif
-
-
     </div>
 
 </aside>
@@ -447,18 +449,6 @@
 }
 
 
-/* ==========================================
-   RESPONSIVE
-========================================== */
 
-@media (max-width: 991px) {
-
-    .sidebar {
-
-        display: none;
-
-    }
-
-}
 
 </style>
