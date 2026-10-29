@@ -23,18 +23,19 @@ class SettingsController extends Controller
         $settings = $request->validate([
             'organization_name' => ['required', 'string', 'max:120'],
             'organization_unit' => ['required', 'string', 'max:120'],
-            'theme' => ['nullable', 'string', 'in:light,dark'],
+
             'asset_prefix' => ['required', 'string', 'max:20'],
             'asset_separator' => ['required', 'string', 'max:3'],
             'asset_digits' => ['required', 'integer', 'min:2', 'max:8'],
             'asset_next_number' => ['required', 'integer', 'min:1'],
             'timezone' => ['required', 'in:Asia/Jakarta (GMT+07:00),Asia/Makassar (GMT+08:00),Asia/Jayapura (GMT+09:00)'],
             'date_format' => ['required', 'string', 'max:30'],
-            'email_notifications' => ['nullable', 'boolean'],
+
             'logo' => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp,svg', 'max:4096'],
         ]);
 
-        $settings['email_notifications'] = $request->boolean('email_notifications');
+
+        $settings['theme'] = 'light';
         $setting = SystemSetting::current();
 
         if ($request->hasFile('logo')) {

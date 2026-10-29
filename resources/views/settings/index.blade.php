@@ -84,27 +84,6 @@
                                     <option value="YYYY-MM-DD" @selected($settings['date_format'] === 'YYYY-MM-DD')>YYYY-MM-DD</option>
                                 </select>
                             </div>
-
-                            <div class="col-12">
-                                <label class="form-label" for="theme-toggle">Tema Tampilan Antarmuka</label>
-                                <div id="theme-toggle" class="d-flex gap-3 mt-1">
-                                    <label class="theme-card-option flex-grow-1 p-3 rounded border {{ ($settings['theme'] ?? 'light') === 'light' ? 'border-primary bg-primary-subtle' : 'bg-light' }} d-flex align-items-center gap-3 cursor-pointer">
-                                        <input type="radio" name="theme" value="light" @checked(($settings['theme'] ?? 'light') === 'light') class="form-check-input">
-                                        <div>
-                                            <strong class="d-block"><i class="bi bi-sun-fill text-warning me-1"></i> Mode Terang (Light)</strong>
-                                            <small class="text-muted">Tampilan bersih dengan palet warna cerah default</small>
-                                        </div>
-                                    </label>
-
-                                    <label class="theme-card-option flex-grow-1 p-3 rounded border {{ ($settings['theme'] ?? 'light') === 'dark' ? 'border-primary bg-primary-subtle' : 'bg-light' }} d-flex align-items-center gap-3 cursor-pointer">
-                                        <input type="radio" name="theme" value="dark" @checked(($settings['theme'] ?? 'light') === 'dark') class="form-check-input">
-                                        <div>
-                                            <strong class="d-block"><i class="bi bi-moon-stars-fill text-primary me-1"></i> Mode Gelap (Dark)</strong>
-                                            <small class="text-muted">Tampilan kontras tinggi yang nyaman di mata</small>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -198,19 +177,9 @@
                             Seluruh metadata inventaris dan data pengguna dilindungi dengan enkripsi AES-256 oleh sistem.
                         </p>
 
-                        <div class="d-flex align-items-center justify-content-between p-2 rounded bg-light mb-3">
+                        <div class="d-flex align-items-center justify-content-between p-2 rounded bg-light mb-0">
                             <span class="small text-muted"><i class="bi bi-lock-fill text-success me-1"></i> Status Enkripsi</span>
                             <span class="badge bg-success">Active AES-256</span>
-                        </div>
-
-                        <hr class="my-3">
-
-                        <div class="form-check form-switch d-flex justify-content-between align-items-center p-0">
-                            <div>
-                                <label class="form-check-label fw-bold small d-block mb-0" for="email_notifications">Email Notifications</label>
-                                <small class="text-muted">Notifikasi perubahan status aset</small>
-                            </div>
-                            <input class="form-check-input ms-auto" type="checkbox" id="email_notifications" name="email_notifications" value="1" @checked($settings['email_notifications']) style="cursor: pointer;">
                         </div>
                     </div>
                 </div>

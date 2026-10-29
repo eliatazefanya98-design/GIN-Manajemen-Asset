@@ -67,7 +67,7 @@
 
 </head>
 
-<body class="role-{{ auth()->user()->role }}" data-theme="{{ \App\Models\SystemSetting::current()->theme ?? 'light' }}">
+<body class="role-{{ auth()->user()->role }}" data-theme="light">
 
 <div class="main-wrapper">
 
@@ -96,7 +96,7 @@
 
 <style>
 {!! file_get_contents(resource_path('css/app-ui.css')) !!}
-{!! file_get_contents(resource_path('css/theme.css')) !!}
+
 </style>
 
 @stack('styles')
